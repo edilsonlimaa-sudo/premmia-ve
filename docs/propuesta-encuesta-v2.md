@@ -80,7 +80,7 @@ perder a segunda razão; o ranking sai da frequência de cada opção.
 desabastecimento. A opção de "no saber si hay gasolina" valida a sua ideia original de
 visibilidade. Única pergunta de múltipla escolha.
 
-**P6. ¿Cómo se entera hoy de dónde hay gasolina?**
+**P6. ¿Cómo se entera hoy de dónde hay gasolina?** (pode marcar várias)
 - Grupos de WhatsApp / redes
 - Pasando por la bomba a ver
 - Me avisa un amigo o chofer
@@ -90,7 +90,7 @@ visibilidade. Única pergunta de múltipla escolha.
 responde "pasando a ver" ou "voy y pruebo", o argumento "me dá seus dados de funcionamento e
 eu viro seu canal" fica pronto.
 
-**P7. ¿Cómo paga normalmente?**
+**P7. ¿Cómo paga normalmente?** (pode marcar várias)
 - Pago Móvil
 - Efectivo (USD)
 - Efectivo (Bs)
@@ -116,7 +116,7 @@ banco). Adicionei Biopago porque é comum em postos na Venezuela.
 *Por quê:* o exemplo em dinheiro evita que a pessoa rejeite "5%" por reflexo. O valor de
 referência da carga (US$ 15) fica configurável no código para você ajustar ao preço real.
 
-**P10. ¿Qué le preocuparía más al pagar por la app?**
+**P10. ¿Qué le preocuparía al pagar por la app?** (pode marcar várias)
 - Que no me reconozcan el pago en la bomba
 - La seguridad de mi dinero o mis datos
 - Que falle el internet y me quede sin cargar
@@ -157,7 +157,7 @@ previsibilidade sobre o funcionamento dele. Mede se a informação move o motori
 
 ## Mudanças no app que isso implica
 
-- Suporte a pergunta de múltipla escolha (P4 e P5), sem limite; "Nada, está bien así" desmarca as outras.
+- Suporte a pergunta de múltipla escolha (P4, P5, P6, P7 e P10), sem limite; a opção "Nada" de cada uma desmarca as outras.
 - Dashboard: card "% irían directo a la estación con gasolina", tabela por tipo de motorista
   (usarían / pagarían / irían directo); gráficos para todas as perguntas.
 - Contador de **"No quiso participar"**: um botão na tela inicial para registrar recusas.

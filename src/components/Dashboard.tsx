@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Bar, BarChart, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
   BadgePercent,
   Hourglass,
@@ -34,12 +34,6 @@ import {
 import { deleteResponse, isToday, useRefusals, useResponses, useTheme } from '../lib/storage'
 import { downloadCSV } from '../lib/csv'
 
-// Validated categorical palette (dataviz skill reference instance), one slot per
-// payment method so a filter never repaints survivors.
-const SERIES = {
-  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'],
-  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181'],
-}
 const SINGLE_HUE = { light: '#2a78d6', dark: '#3987e5' }
 const INK = {
   light: { primary: '#0f172a', secondary: '#64748b', surface: '#ffffff', grid: '#e2e8f0' },
@@ -200,7 +194,13 @@ export function Dashboard({
               theme={theme}
               title="Si la app mostrara dónde hay gasolina y cuánta cola"
             />
-            <DistributionBars question={Q('preocupacion')} data={data} theme={theme} title="Principal preocupación" />
+            <DistributionBars
+              question={Q('preocupacion')}
+              data={data}
+              theme={theme}
+              title="Preocupaciones al pagar por la app"
+              note="Varias respuestas por persona; % sobre entrevistados"
+            />
 
             {/* ---------------------------------------------------------- Hoy */}
             <SectionTitle>Cómo cargan hoy</SectionTitle>
@@ -229,9 +229,16 @@ export function Dashboard({
               data={data}
               theme={theme}
               title="Cómo se enteran hoy de dónde hay gasolina"
-              note="La estación no tiene canal con quienes pasan a ver o van a probar"
+              note="Varias respuestas por persona; % sobre entrevistados"
+
             />
-            <PaymentDonut data={data} theme={theme} />
+            <DistributionBars
+              question={Q('metodo_pago')}
+              data={data}
+              theme={theme}
+              title="Cómo pagan hoy"
+              note="Varias respuestas por persona; % sobre entrevistados"
+            />
 
             {/* ------------------------------------------------------- Perfil */}
             <SectionTitle>Perfil</SectionTitle>
@@ -477,61 +484,6 @@ function Mini({ label, value, strong = false }: { label: string; value: string; 
   )
 }
 
-function PaymentDonut({ data, theme }: { data: Survey[]; theme: 'light' | 'dark' }) {
-  const q = Q('metodo_pago')
-  const total = data.length
-  const rows = q.options.map((o, i) => ({
-    name: o.label,
-    value: data.filter((r) => r.metodo_pago === o.value).length,
-    color: SERIES[theme][i],
-  }))
-  const pagoMovil = rows[0].value
-  return (
-    <Card>
-      <h2 className="text-base font-bold">Método de pago principal hoy</h2>
-      <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
-        Pago Móvil: <strong className="text-slate-800 dark:text-slate-100">{pct(pagoMovil, total)}%</strong> · Otros
-        métodos: <strong className="text-slate-800 dark:text-slate-100">{pct(total - pagoMovil, total)}%</strong>
-      </p>
-      <div className="flex items-center gap-3">
-        <div className="h-44 w-44 shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={rows.filter((r) => r.value > 0)}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={48}
-                outerRadius={80}
-                paddingAngle={2}
-                stroke={INK[theme].surface}
-                strokeWidth={2}
-                isAnimationActive={false}
-              >
-                {rows
-                  .filter((r) => r.value > 0)
-                  .map((r) => (
-                    <Cell key={r.name} fill={r.color} />
-                  ))}
-              </Pie>
-              <Tooltip {...tooltipStyle(theme)} formatter={(v) => [`${v} (${pct(Number(v), total)}%)`, '']} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <ul className="flex flex-1 flex-col gap-2 text-sm">
-          {rows.map((r) => (
-            <li key={r.name} className="flex items-center gap-2">
-              <span className="size-3 shrink-0 rounded-sm" style={{ background: r.color }} />
-              <span className="flex-1 truncate">{r.name}</span>
-              <span className="tabular-nums font-semibold">{pct(r.value, total)}%</span>
-              <span className="w-6 text-right tabular-nums text-slate-400 dark:text-slate-500">{r.value}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </Card>
-  )
-}
 
 function DistributionBars({
   question,

@@ -103,6 +103,8 @@ export const QUESTIONS: Question[] = [
     id: 'info_hoy',
     block: 'Hoy',
     title: '¿Cómo se entera hoy de dónde hay gasolina?',
+    subtitle: 'Puede marcar varias',
+    multi: true,
     options: [
       { value: 'whatsapp', label: 'Grupos de WhatsApp / redes' },
       { value: 'pasando', label: 'Pasando por la bomba a ver' },
@@ -114,6 +116,8 @@ export const QUESTIONS: Question[] = [
     id: 'metodo_pago',
     block: 'Hoy',
     title: '¿Cómo paga normalmente?',
+    subtitle: 'Puede marcar varias',
+    multi: true,
     options: [
       { value: 'pago_movil', label: 'Pago Móvil' },
       { value: 'usd', label: 'Efectivo (USD)' },
@@ -148,7 +152,9 @@ export const QUESTIONS: Question[] = [
   {
     id: 'preocupacion',
     block: 'La app',
-    title: '¿Qué le preocuparía más al pagar por la app?',
+    title: '¿Qué le preocuparía al pagar por la app?',
+    subtitle: 'Puede marcar varias',
+    multi: true,
     options: [
       { value: 'no_reconocen', label: 'Que no me reconozcan el pago en la bomba' },
       { value: 'seguridad', label: 'La seguridad de mi dinero o mis datos' },
@@ -208,7 +214,8 @@ export const wouldGoDirect = (r: Partial<Answers>) => r.iria_directo === 'direct
 /** Throughput argument for the station: drivers who think getting out to pay slows the queue. */
 export const thinksQueueSlower = (r: Partial<Answers>) => r.frena_cola === 'mucho' || r.frena_cola === 'poco'
 /** Drivers who today have no channel with the station (find out by passing by or trying). */
-export const noInfoChannel = (r: Partial<Answers>) => r.info_hoy === 'pasando' || r.info_hoy === 'nada'
+export const noInfoChannel = (r: Partial<Answers>) =>
+  hasValue(r, 'info_hoy', 'pasando') || hasValue(r, 'info_hoy', 'nada')
 export const isProfessional = (r: Partial<Answers>) => r.uso === 'pasajeros' || r.uso === 'delivery' || r.uso === 'comercial'
 
 /** Formats seconds as m:ss. */
