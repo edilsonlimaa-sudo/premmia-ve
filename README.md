@@ -34,7 +34,9 @@ teléfono hay que servirla por HTTPS.
    campos opcionales de placa y WhatsApp, botón "Guardar y siguiente" que limpia y vuelve a P1.
 3. **Métricas / Reporte** – KPIs (entrevistados, % usarían la app, % pagarían 3–5 %), rosca de
    métodos de pago, barras de tiempo perdido / intención / recargo / frecuencia, tabla de leads
-   con copiar, filtro por estación, exportar CSV y borrar datos.
+   con copiar, filtro por estación y exportar CSV.
+4. **Ajustes** (engranaje en inicio) – estado de los datos y **Zona de peligro**: borrar todas las
+   respuestas o restablecer la app por completo. Cada acción exige escribir `BORRAR` para confirmar.
 
 ## Datos
 

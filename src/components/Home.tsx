@@ -1,4 +1,4 @@
-import { BarChart3, Download, Plus, WifiOff } from 'lucide-react'
+import { BarChart3, Download, Plus, Settings as SettingsIcon, WifiOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { Screen } from '../App'
 import type { ToastMsg } from './Toast'
@@ -50,6 +50,16 @@ export function Home({
             respuestas
             {todayHere !== today.length && ` · ${todayHere} en esta estación`}
           </>
+        }
+        right={
+          <button
+            type="button"
+            onClick={() => go('settings')}
+            aria-label="Ajustes"
+            className="flex size-12 shrink-0 items-center justify-center rounded-xl text-slate-700 active:bg-slate-200 dark:text-slate-200 dark:active:bg-slate-700"
+          >
+            <SettingsIcon className="size-6" />
+          </button>
         }
       />
 

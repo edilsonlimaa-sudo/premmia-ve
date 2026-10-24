@@ -5,7 +5,7 @@ import type { Screen } from '../App'
 import type { ToastMsg } from './Toast'
 import { TopBar } from './TopBar'
 import { QUESTIONS, labelFor, type Question, type Survey } from '../lib/model'
-import { clearResponses, deleteResponse, useResponses, useTheme } from '../lib/storage'
+import { deleteResponse, useResponses, useTheme } from '../lib/storage'
 import { downloadCSV } from '../lib/csv'
 
 // Validated categorical palette (dataviz skill reference instance), one slot per
@@ -50,14 +50,6 @@ export function Dashboard({
       showToast(`${what} copiado`, 'info')
     } catch {
       showToast('No se pudo copiar', 'info')
-    }
-  }
-
-  const removeAll = () => {
-    if (all.length === 0) return
-    if (confirm(`¿Borrar las ${all.length} respuestas guardadas en este teléfono? Esta acción no se puede deshacer.`)) {
-      clearResponses()
-      showToast('Datos borrados', 'info')
     }
   }
 
@@ -165,25 +157,20 @@ export function Dashboard({
               )}
             </Card>
 
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  downloadCSV(data)
-                  showToast(`CSV con ${data.length} respuestas descargado`)
-                }}
-                className="flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white text-base font-bold text-slate-800 active:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-              >
-                <Download className="size-5" /> Exportar CSV
-              </button>
-              <button
-                type="button"
-                onClick={removeAll}
-                className="flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-red-200 bg-white text-base font-bold text-red-700 active:bg-red-50 dark:border-red-900 dark:bg-slate-800 dark:text-red-300"
-              >
-                <Trash2 className="size-5" /> Borrar datos
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                downloadCSV(data)
+                showToast(`CSV con ${data.length} respuestas descargado`)
+              }}
+              className="flex h-14 items-center justify-center gap-2 rounded-2xl border-2 border-slate-300 bg-white text-base font-bold text-slate-800 active:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            >
+              <Download className="size-5" /> Exportar CSV
+              {stationFilter !== 'all' && <span className="font-normal text-slate-500">({stationFilter})</span>}
+            </button>
+            <p className="-mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
+              Para borrar datos, usa Ajustes → Zona de peligro.
+            </p>
           </>
         )}
       </main>

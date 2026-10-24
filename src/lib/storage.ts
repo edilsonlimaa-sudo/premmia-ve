@@ -82,6 +82,23 @@ export function clearResponses() {
   setResponses([])
 }
 
+/** Wipes everything the app stored on this device (responses, stations, theme) and reloads. */
+export function resetApp() {
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('encuesta:'))
+      .forEach((k) => localStorage.removeItem(k))
+  } catch (e) {
+    console.error('No se pudo limpiar localStorage', e)
+  }
+  responsesCache = null
+  stationsCache = null
+  currentStationCache = null
+  themeCache = null
+  emit()
+  window.location.reload()
+}
+
 export function useResponses(): Survey[] {
   return useSyncExternalStore(subscribe, getResponses, getResponses)
 }

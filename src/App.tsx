@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { Home } from './components/Home'
 import { Survey } from './components/Survey'
+import { Settings } from './components/Settings'
 import { Toast, type ToastMsg } from './components/Toast'
 
 // Recharts only loads when the report is opened, keeping the survey flow light.
@@ -8,7 +9,7 @@ const Dashboard = lazy(() =>
   import('./components/Dashboard').then((m) => ({ default: m.Dashboard })),
 )
 
-export type Screen = 'home' | 'survey' | 'dashboard'
+export type Screen = 'home' | 'survey' | 'dashboard' | 'settings'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home')
@@ -39,6 +40,7 @@ export default function App() {
     <div className="min-h-full flex flex-col bg-slate-50 text-slate-900 dark:bg-[#0b1220] dark:text-slate-100">
       {screen === 'home' && <Home go={go} showToast={showToast} />}
       {screen === 'survey' && <Survey go={go} showToast={showToast} />}
+      {screen === 'settings' && <Settings go={go} showToast={showToast} />}
       {screen === 'dashboard' && (
         <Suspense
           fallback={
