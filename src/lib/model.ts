@@ -3,7 +3,8 @@ export type Option = { value: string; label: string; hint?: string }
 export type QuestionId =
   | 'uso'
   | 'frecuencia'
-  | 'tiempo_pago'
+  | 'frena_cola'
+  | 'impacto_bajarse'
   | 'molestia'
   | 'info_hoy'
   | 'metodo_pago'
@@ -60,14 +61,27 @@ export const QUESTIONS: Question[] = [
   },
   // ------------------------------------------------------------ B. Dolor actual
   {
-    id: 'tiempo_pago',
+    id: 'frena_cola',
     block: 'Hoy',
-    title: '¿Cuánto tiempo le toma el pago hoy?',
-    subtitle: 'Bajarse, hacer pago móvil, mostrar comprobante, recibir ticket',
+    title: '¿Tener que bajarse a pagar hace que la cola avance más lento?',
     options: [
-      { value: '<5', label: 'Menos de 5 minutos' },
-      { value: '5-15', label: 'De 5 a 15 minutos' },
-      { value: '>15', label: 'Más de 15 minutos' },
+      { value: 'mucho', label: 'Sí, mucho' },
+      { value: 'poco', label: 'Un poco' },
+      { value: 'no', label: 'No, la cola es lenta por otra razón' },
+      { value: 'no_pensado', label: 'No lo había pensado' },
+    ],
+  },
+  {
+    id: 'impacto_bajarse',
+    block: 'Hoy',
+    title: '¿Qué es lo que más le afecta de tener que bajarse a pagar?',
+    subtitle: 'Solo una, la que más pesa',
+    options: [
+      { value: 'tiempo', label: 'El tiempo que pierdo' },
+      { value: 'carro_solo', label: 'Dejar el carro solo', hint: 'Niños, pertenencias' },
+      { value: 'fila_pago', label: 'La fila para pagar y mostrar el comprobante' },
+      { value: 'inseguridad', label: 'La inseguridad al bajarme' },
+      { value: 'nada', label: 'Nada, me da igual' },
     ],
   },
   {
@@ -190,6 +204,8 @@ export const wouldUse = (r: Partial<Answers>) => r.intencion === 'si' || r.inten
 export const wouldPay = (r: Partial<Answers>) => r.recargo === '5%' || r.recargo === '3%'
 /** The info-driven KPI: drivers the app could steer to a station that reports fuel + queue. */
 export const wouldGoDirect = (r: Partial<Answers>) => r.iria_directo === 'directo'
+/** Throughput argument for the station: drivers who think getting out to pay slows the queue. */
+export const thinksQueueSlower = (r: Partial<Answers>) => r.frena_cola === 'mucho' || r.frena_cola === 'poco'
 /** Drivers who today have no channel with the station (find out by passing by or trying). */
 export const noInfoChannel = (r: Partial<Answers>) => r.info_hoy === 'pasando' || r.info_hoy === 'nada'
 export const isProfessional = (r: Partial<Answers>) => r.uso === 'pasajeros' || r.uso === 'delivery' || r.uso === 'comercial'

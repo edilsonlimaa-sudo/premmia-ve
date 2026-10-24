@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Bar, BarChart, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
   BadgePercent,
+  Hourglass,
   Navigation,
   Copy,
   Download,
@@ -22,6 +23,7 @@ import {
   hasValue,
   labelFor,
   noInfoChannel,
+  thinksQueueSlower,
   wouldGoDirect,
   wouldPay,
   wouldUse,
@@ -81,6 +83,8 @@ export function Dashboard({
   const nDirect = data.filter(wouldGoDirect).length
   const nLook = data.filter((r) => r.iria_directo === 'miraria').length
   const nNoChannel = data.filter(noInfoChannel).length
+  const nSlower = data.filter(thinksQueueSlower).length
+  const nSlowerMuch = data.filter((r) => r.frena_cola === 'mucho').length
   const leads = data.filter((r) => r.plate || r.whatsapp)
   const todayN = data.filter((r) => isToday(r.createdAt)).length
 
@@ -171,6 +175,15 @@ export function Dashboard({
                 sub={`+${pct(nLook, total)}% lo mirarían · ${pct(nNoChannel, total)}% hoy va a probar suerte`}
                 accent
               />
+              <div className="col-span-2">
+                <Kpi
+                  icon={<Hourglass className="size-5" />}
+                  label="Creen que bajarse a pagar frena la cola"
+                  value={`${pct(nSlower, total)}%`}
+                  sub={`${pct(nSlowerMuch, total)}% dicen "mucho" · argumento de carros por hora para la estación`}
+                  accent
+                />
+              </div>
             </div>
 
             <DriverTypeTable data={data} />
@@ -192,6 +205,18 @@ export function Dashboard({
             {/* ---------------------------------------------------------- Hoy */}
             <SectionTitle>Cómo cargan hoy</SectionTitle>
             <DistributionBars
+              question={Q('frena_cola')}
+              data={data}
+              theme={theme}
+              title="¿Bajarse a pagar frena la cola?"
+            />
+            <DistributionBars
+              question={Q('impacto_bajarse')}
+              data={data}
+              theme={theme}
+              title="Lo que más les afecta de bajarse a pagar"
+            />
+            <DistributionBars
               question={Q('molestia')}
               data={data}
               theme={theme}
@@ -205,7 +230,6 @@ export function Dashboard({
               title="Cómo se enteran hoy de dónde hay gasolina"
               note="La estación no tiene canal con quienes pasan a ver o van a probar"
             />
-            <DistributionBars question={Q('tiempo_pago')} data={data} theme={theme} title="Tiempo que les toma el pago" />
             <PaymentDonut data={data} theme={theme} />
 
             {/* ------------------------------------------------------- Perfil */}
