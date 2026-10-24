@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_STATIONS, type Survey } from './model'
 
-const KEY_RESPONSES = 'encuesta:responses:v1'
+const KEY_RESPONSES = 'encuesta:responses:v2'
+const KEY_REFUSALS = 'encuesta:refusals:v1'
 const KEY_STATIONS = 'encuesta:stations:v1'
 const KEY_STATION = 'encuesta:current-station:v1'
 const KEY_THEME = 'encuesta:theme:v1'
@@ -19,6 +20,7 @@ function subscribe(l: Listener) {
     if (e.key?.startsWith('encuesta:')) {
       // Another tab changed the data: drop caches and notify.
       responsesCache = null
+      refusalsCache = null
       stationsCache = null
       currentStationCache = null
       l()
@@ -82,6 +84,33 @@ export function deleteResponse(id: string) {
 
 export function clearResponses() {
   setResponses([])
+  setRefusals([])
+}
+
+// --- Refusals ("No quiso participar") -----------------------------------------
+export type Refusal = { station: string; createdAt: string }
+let refusalsCache: Refusal[] | null = null
+
+function getRefusals(): Refusal[] {
+  if (!refusalsCache) refusalsCache = read<Refusal[]>(KEY_REFUSALS, [])
+  return refusalsCache
+}
+
+function setRefusals(list: Refusal[]) {
+  refusalsCache = list
+  write(KEY_REFUSALS, list)
+}
+
+export function addRefusal(station: string) {
+  setRefusals([...getRefusals(), { station, createdAt: new Date().toISOString() }])
+}
+
+export function undoLastRefusal() {
+  setRefusals(getRefusals().slice(0, -1))
+}
+
+export function useRefusals(): Refusal[] {
+  return useSyncExternalStore(subscribe, getRefusals, getRefusals)
 }
 
 /** Wipes everything the app stored on this device (responses, stations, theme) and reloads. */
@@ -94,6 +123,7 @@ export function resetApp() {
     console.error('No se pudo limpiar localStorage', e)
   }
   responsesCache = null
+  refusalsCache = null
   stationsCache = null
   currentStationCache = null
   themeCache = null

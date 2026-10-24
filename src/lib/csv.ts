@@ -11,7 +11,7 @@ export function toCSV(list: Survey[]): string {
     'fecha',
     'hora',
     'estacion',
-    ...QUESTIONS.flatMap((q) => [`${q.id}_codigo`, `${q.id}_${q.title}`]),
+    ...QUESTIONS.flatMap((q) => [`${q.id}_codigo`, q.id]),
     'placa',
     'whatsapp',
     'duracion_seg',
@@ -25,7 +25,8 @@ export function toCSV(list: Survey[]): string {
       d.toLocaleDateString('es-VE'),
       d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
       s.station,
-      ...QUESTIONS.flatMap((q) => [s[q.id], labelFor(q.id, s[q.id])]),
+      // Multi-choice answers keep their codes joined by "|" and labels joined by " + ".
+      ...QUESTIONS.flatMap((q) => [s[q.id] ?? '', labelFor(q.id, s[q.id] ?? '')]),
       s.plate,
       s.whatsapp,
       s.durationSec ?? '',

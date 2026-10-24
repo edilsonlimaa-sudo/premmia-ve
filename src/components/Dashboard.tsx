@@ -1,6 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Copy, Download, Trash2, Users, Smartphone, BadgePercent, Inbox, Timer } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  BadgePercent,
+  Copy,
+  Download,
+  Inbox,
+  Smartphone,
+  Timer,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import type { Screen } from '../App'
 import type { ToastMsg } from './Toast'
 import { TopBar } from './TopBar'
@@ -9,18 +19,23 @@ import {
   QUESTIONS,
   durationStats,
   fmtDuration,
+  hasValue,
   labelFor,
+  wouldPay,
+  wouldSwitch,
+  wouldUse,
   type Question,
+  type QuestionId,
   type Survey,
 } from '../lib/model'
-import { deleteResponse, useResponses, useTheme } from '../lib/storage'
+import { deleteResponse, isToday, useRefusals, useResponses, useTheme } from '../lib/storage'
 import { downloadCSV } from '../lib/csv'
 
 // Validated categorical palette (dataviz skill reference instance), one slot per
 // payment method so a filter never repaints survivors.
 const SERIES = {
-  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'],
-  dark: ['#3987e5', '#d95926', '#199e70', '#c98500'],
+  light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'],
+  dark: ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181'],
 }
 const SINGLE_HUE = { light: '#2a78d6', dark: '#3987e5' }
 const INK = {
@@ -29,6 +44,7 @@ const INK = {
 }
 
 const pct = (n: number, d: number) => (d === 0 ? 0 : Math.round((n / d) * 100))
+const Q = (id: QuestionId): Question => QUESTIONS.find((q) => q.id === id)!
 
 export function Dashboard({
   go,
@@ -38,19 +54,33 @@ export function Dashboard({
   showToast: (text: string, kind?: ToastMsg['kind']) => void
 }) {
   const all = useResponses()
+  const allRefusals = useRefusals()
   const theme = useTheme()
   const [stationFilter, setStationFilter] = useState<string>('all')
 
-  const stations = useMemo(() => Array.from(new Set(all.map((r) => r.station))).sort(), [all])
+  const stations = useMemo(
+    () => Array.from(new Set([...all.map((r) => r.station), ...allRefusals.map((r) => r.station)])).sort(),
+    [all, allRefusals],
+  )
   const data = useMemo(
     () => (stationFilter === 'all' ? all : all.filter((r) => r.station === stationFilter)),
     [all, stationFilter],
   )
+  const refusals = useMemo(
+    () => (stationFilter === 'all' ? allRefusals : allRefusals.filter((r) => r.station === stationFilter)),
+    [allRefusals, stationFilter],
+  )
 
   const total = data.length
-  const wouldUse = data.filter((r) => r.p3 === 'si' || r.p3 === 'tal_vez').length
-  const wouldPay = data.filter((r) => r.p4 === '5%' || r.p4 === '3%').length
+  const approached = total + refusals.length
+  const nUse = data.filter(wouldUse).length
+  const nUseSure = data.filter((r) => r.intencion === 'si').length
+  const nPay = data.filter(wouldPay).length
+  const nPay5 = data.filter((r) => r.recargo === '5%').length
+  const nSwitch = data.filter(wouldSwitch).length
+  const nSwitchFar = data.filter((r) => r.cambiaria === 'si_lejos').length
   const leads = data.filter((r) => r.plate || r.whatsapp)
+  const todayN = data.filter((r) => isToday(r.createdAt)).length
 
   const copy = async (text: string, what: string) => {
     try {
@@ -108,31 +138,68 @@ export function Dashboard({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2.5">
-              <Kpi icon={<Users className="size-5" />} label="Entrevistados" value={String(total)} />
+            {/* ------------------------------------------------------------ KPIs */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <Kpi
+                icon={<Users className="size-5" />}
+                label="Entrevistados"
+                value={String(total)}
+                sub={
+                  refusals.length > 0
+                    ? `${approached} abordados · ${pct(total, approached)}% respondió`
+                    : `${todayN} hoy`
+                }
+              />
               <Kpi
                 icon={<Smartphone className="size-5" />}
                 label="Usarían la app"
-                value={`${pct(wouldUse, total)}%`}
-                sub={`${wouldUse} de ${total}`}
+                value={`${pct(nUse, total)}%`}
+                sub={`${pct(nUseSure, total)}% "definitivamente sí"`}
               />
               <Kpi
                 icon={<BadgePercent className="size-5" />}
-                label="Pagarían 3–5%"
-                value={`${pct(wouldPay, total)}%`}
-                sub={`${wouldPay} de ${total}`}
+                label="Pagarían 3–5 %"
+                value={`${pct(nPay, total)}%`}
+                sub={`${pct(nPay5, total)}% hasta 5 %`}
+              />
+              <Kpi
+                icon={<ArrowLeftRight className="size-5" />}
+                label="Cambiarían de estación"
+                value={`${pct(nSwitch, total)}%`}
+                sub={`${pct(nSwitchFar, total)}% aunque quede más lejos`}
+                accent
               />
             </div>
 
+            <DriverTypeTable data={data} />
+
             <DurationCard data={data} theme={theme} />
 
+            {/* ------------------------------------------------------- La app */}
+            <SectionTitle>La app</SectionTitle>
+            <DistributionBars question={Q('intencion')} data={data} theme={theme} />
+            <DistributionBars question={Q('recargo')} data={data} theme={theme} title="Recargo máximo que pagarían" />
+            <DistributionBars question={Q('cambiaria')} data={data} theme={theme} />
+            <DistributionBars question={Q('preocupacion')} data={data} theme={theme} title="Principal preocupación" />
+
+            {/* ---------------------------------------------------------- Hoy */}
+            <SectionTitle>Cómo cargan hoy</SectionTitle>
+            <DistributionBars
+              question={Q('molestia')}
+              data={data}
+              theme={theme}
+              title="Lo más molesto de cargar hoy"
+              note="Hasta 2 respuestas por persona; % sobre entrevistados"
+            />
+            <DistributionBars question={Q('tiempo_pago')} data={data} theme={theme} title="Tiempo que les toma el pago" />
             <PaymentDonut data={data} theme={theme} />
 
-            <DistributionBars question={QUESTIONS[1]} data={data} theme={theme} title="Tiempo perdido en la fila / oficina" />
-            <DistributionBars question={QUESTIONS[2]} data={data} theme={theme} title="Intención de uso" />
-            <DistributionBars question={QUESTIONS[3]} data={data} theme={theme} title="Disposición a pagar recargo" />
-            <DistributionBars question={QUESTIONS[0]} data={data} theme={theme} title="Frecuencia de abastecimiento" />
+            {/* ------------------------------------------------------- Perfil */}
+            <SectionTitle>Perfil</SectionTitle>
+            <DistributionBars question={Q('uso')} data={data} theme={theme} title="Uso del vehículo" />
+            <DistributionBars question={Q('frecuencia')} data={data} theme={theme} title="Frecuencia de carga" />
 
+            {/* -------------------------------------------------------- Leads */}
             <Card>
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="text-base font-bold">Leads ({leads.length})</h2>
@@ -155,9 +222,7 @@ export function Dashboard({
                 )}
               </div>
               {leads.length === 0 ? (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Ningún conductor dejó placa o WhatsApp todavía.
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Ningún conductor dejó placa o WhatsApp todavía.</p>
               ) : (
                 <ul className="divide-y divide-slate-200 dark:divide-slate-700">
                   {[...leads].reverse().map((l) => (
@@ -188,6 +253,8 @@ export function Dashboard({
   )
 }
 
+// ------------------------------------------------------------------ pieces
+
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#111a2e]">
@@ -196,16 +263,83 @@ function Card({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Kpi({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-[#111a2e]">
-      <div className="mb-1 flex items-center gap-1.5 text-slate-500 dark:text-slate-400">{icon}</div>
+    <h2 className="-mb-2 mt-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{children}</h2>
+  )
+}
+
+function Kpi({
+  icon,
+  label,
+  value,
+  sub,
+  accent = false,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  sub?: string
+  accent?: boolean
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-3 ${
+        accent
+          ? 'border-brand-500 bg-brand-50 dark:border-brand-600 dark:bg-brand-700/20'
+          : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-[#111a2e]'
+      }`}
+    >
+      <div className={`mb-1 flex items-center gap-1.5 ${accent ? 'text-brand-700 dark:text-brand-500' : 'text-slate-500 dark:text-slate-400'}`}>
+        {icon}
+      </div>
       <p className="text-2xl font-extrabold tabular-nums leading-none">{value}</p>
       <p className="mt-1 text-[11px] font-semibold uppercase leading-tight tracking-wide text-slate-500 dark:text-slate-400">
         {label}
       </p>
-      {sub && <p className="text-[11px] text-slate-400 dark:text-slate-500">{sub}</p>}
+      {sub && <p className="text-[11px] text-slate-500 dark:text-slate-400">{sub}</p>}
     </div>
+  )
+}
+
+function DriverTypeTable({ data }: { data: Survey[] }) {
+  const rows = Q('uso').options.map((o) => {
+    const sub = data.filter((r) => r.uso === o.value)
+    return {
+      label: o.label.split(' / ')[0],
+      n: sub.length,
+      use: pct(sub.filter(wouldUse).length, sub.length),
+      pay: pct(sub.filter(wouldPay).length, sub.length),
+      sw: pct(sub.filter(wouldSwitch).length, sub.length),
+    }
+  })
+  return (
+    <Card>
+      <h2 className="text-base font-bold">Por tipo de conductor</h2>
+      <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">Quién quiere más el servicio</p>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-[11px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <th className="pb-1 text-left font-semibold">Tipo</th>
+            <th className="pb-1 text-right font-semibold">n</th>
+            <th className="pb-1 text-right font-semibold">Usarían</th>
+            <th className="pb-1 text-right font-semibold">Pagarían</th>
+            <th className="pb-1 text-right font-semibold">Cambiarían</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          {rows.map((r) => (
+            <tr key={r.label} className={r.n === 0 ? 'text-slate-400 dark:text-slate-600' : ''}>
+              <td className="py-1.5 font-semibold">{r.label}</td>
+              <td className="py-1.5 text-right tabular-nums">{r.n}</td>
+              <td className="py-1.5 text-right tabular-nums">{r.n ? `${r.use}%` : '—'}</td>
+              <td className="py-1.5 text-right tabular-nums">{r.n ? `${r.pay}%` : '—'}</td>
+              <td className="py-1.5 text-right tabular-nums font-semibold">{r.n ? `${r.sw}%` : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
   )
 }
 
@@ -234,9 +368,7 @@ function DurationCard({ data, theme }: { data: Survey[]; theme: 'light' | 'dark'
         <h2 className="flex items-center gap-2 text-base font-bold">
           <Timer className="size-5 text-slate-400" /> Duración de la encuesta
         </h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Aún no hay respuestas con tiempo medido.
-        </p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Aún no hay respuestas con tiempo medido.</p>
       </Card>
     )
   }
@@ -255,9 +387,7 @@ function DurationCard({ data, theme }: { data: Survey[]; theme: 'light' | 'dark'
       <h2 className="flex items-center gap-2 text-base font-bold">
         <Timer className="size-5 text-slate-400" /> Duración de la encuesta
       </h2>
-      <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-        De Iniciar a Guardar · {stats.n} medidas
-      </p>
+      <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">De Iniciar a Guardar · {stats.n} medidas</p>
       <div className="mb-4 grid grid-cols-4 gap-2 text-center">
         <Mini label="Promedio" value={fmtDuration(stats.avg)} strong />
         <Mini label="Mediana" value={fmtDuration(stats.median)} />
@@ -269,11 +399,8 @@ function DurationCard({ data, theme }: { data: Survey[]; theme: 'light' | 'dark'
         {buckets.map((b) => (
           <li key={b.label} className="flex items-center gap-2 text-sm">
             <span className="w-28 shrink-0 text-xs text-slate-600 dark:text-slate-300">{b.label}</span>
-            <span className="relative h-5 flex-1 overflow-hidden rounded" style={{ background: ink.grid, opacity: 1 }}>
-              <span
-                className="absolute inset-y-0 left-0 rounded"
-                style={{ width: `${b.pct}%`, background: SINGLE_HUE[theme] }}
-              />
+            <span className="relative h-5 flex-1 overflow-hidden rounded" style={{ background: ink.grid }}>
+              <span className="absolute inset-y-0 left-0 rounded" style={{ width: `${b.pct}%`, background: SINGLE_HUE[theme] }} />
             </span>
             <span className="w-10 text-right text-xs font-semibold tabular-nums">{b.pct}%</span>
           </li>
@@ -288,9 +415,7 @@ function DurationCard({ data, theme }: { data: Survey[]; theme: 'light' | 'dark'
           <div className="flex h-16 items-end gap-1" aria-label="Duración de las últimas encuestas">
             {recent.map((r) => (
               <div key={r.id} className="flex flex-1 flex-col items-center gap-0.5" title={`#${r.seq} · ${fmtDuration(r.durationSec)}`}>
-                <span className="text-[10px] tabular-nums text-slate-500 dark:text-slate-400">
-                  {fmtDuration(r.durationSec)}
-                </span>
+                <span className="text-[10px] tabular-nums text-slate-500 dark:text-slate-400">{fmtDuration(r.durationSec)}</span>
                 <span
                   className="w-full rounded-t"
                   style={{ height: `${Math.max(4, (r.durationSec! / recentMax) * 40)}px`, background: SINGLE_HUE[theme] }}
@@ -314,11 +439,11 @@ function Mini({ label, value, strong = false }: { label: string; value: string; 
 }
 
 function PaymentDonut({ data, theme }: { data: Survey[]; theme: 'light' | 'dark' }) {
-  const q = QUESTIONS[4]
+  const q = Q('metodo_pago')
   const total = data.length
   const rows = q.options.map((o, i) => ({
     name: o.label,
-    value: data.filter((r) => r.p5 === o.value).length,
+    value: data.filter((r) => r.metodo_pago === o.value).length,
     color: SERIES[theme][i],
   }))
   const pagoMovil = rows[0].value
@@ -350,10 +475,7 @@ function PaymentDonut({ data, theme }: { data: Survey[]; theme: 'light' | 'dark'
                     <Cell key={r.name} fill={r.color} />
                   ))}
               </Pie>
-              <Tooltip
-                {...tooltipStyle(theme)}
-                formatter={(v) => [`${v} (${pct(Number(v), total)}%)`, '']}
-              />
+              <Tooltip {...tooltipStyle(theme)} formatter={(v) => [`${v} (${pct(Number(v), total)}%)`, '']} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -377,29 +499,32 @@ function DistributionBars({
   data,
   theme,
   title,
+  note,
 }: {
   question: Question
   data: Survey[]
   theme: 'light' | 'dark'
-  title: string
+  title?: string
+  note?: string
 }) {
   const total = data.length
   const rows = question.options.map((o) => {
-    const n = data.filter((r) => r[question.id] === o.value).length
+    const n = data.filter((r) => hasValue(r, question.id, o.value)).length
     return { name: o.label, n, pct: pct(n, total) }
   })
   const ink = INK[theme]
   return (
     <Card>
-      <h2 className="mb-2 text-base font-bold">{title}</h2>
-      <div style={{ height: rows.length * 44 + 8 }}>
+      <h2 className="text-base font-bold">{title ?? question.title}</h2>
+      {note && <p className="text-xs text-slate-500 dark:text-slate-400">{note}</p>}
+      <div className="mt-2" style={{ height: rows.length * 44 + 8 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 56, bottom: 0, left: 0 }} barCategoryGap={8}>
             <XAxis type="number" hide domain={[0, 100]} />
             <YAxis
               type="category"
               dataKey="name"
-              width={150}
+              width={160}
               tickLine={false}
               axisLine={false}
               tick={{ fill: ink.primary, fontSize: 12 }}
@@ -410,7 +535,13 @@ function DistributionBars({
               cursor={{ fill: ink.grid, opacity: 0.4 }}
               formatter={(v, _n, item) => [`${item.payload.n} respuestas (${v}%)`, '']}
             />
-            <Bar dataKey="pct" fill={SINGLE_HUE[theme]} radius={[0, 4, 4, 0]} isAnimationActive={false} background={{ fill: ink.grid, opacity: 0.35, radius: 4 }}>
+            <Bar
+              dataKey="pct"
+              fill={SINGLE_HUE[theme]}
+              radius={[0, 4, 4, 0]}
+              isAnimationActive={false}
+              background={{ fill: ink.grid, opacity: 0.35, radius: 4 }}
+            >
               <LabelList
                 dataKey="pct"
                 position="right"
@@ -452,7 +583,8 @@ function LeadRow({ lead, onCopy }: { lead: Survey; onCopy: (text: string, what: 
         </div>
         <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
           #{lead.seq} · {lead.station} · {d.toLocaleDateString('es-VE')}{' '}
-          {d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })} · {labelFor('p3', lead.p3)}
+          {d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })} · {labelFor('uso', lead.uso)} ·{' '}
+          {labelFor('intencion', lead.intencion)}
         </p>
       </div>
       <button

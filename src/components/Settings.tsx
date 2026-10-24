@@ -28,7 +28,7 @@ export function Settings({
   const dangers: Danger[] = [
     {
       title: 'Borrar todas las respuestas',
-      description: `Elimina las ${responses.length} respuestas guardadas en este teléfono. Las estaciones y el tema se mantienen.`,
+      description: `Elimina las ${responses.length} respuestas y las negativas guardadas en este teléfono. Las estaciones y el tema se mantienen.`,
       button: 'Borrar respuestas',
       run: () => {
         clearResponses()

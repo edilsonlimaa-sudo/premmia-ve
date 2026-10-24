@@ -1,30 +1,68 @@
 export type Option = { value: string; label: string; hint?: string }
 
-export type QuestionId = 'p1' | 'p2' | 'p3' | 'p4' | 'p5'
+export type QuestionId =
+  | 'uso'
+  | 'frecuencia'
+  | 'tiempo_pago'
+  | 'molestia'
+  | 'metodo_pago'
+  | 'intencion'
+  | 'recargo'
+  | 'preocupacion'
+  | 'cambiaria'
 
 export type Question = {
   id: QuestionId
+  block: string
   title: string
   subtitle?: string
   options: Option[]
+  /** Multiple choice: the answer stores the selected values joined by MULTI_SEP. */
+  multi?: boolean
+  /** Max selections for a multi question. */
+  max?: number
+}
+
+export const MULTI_SEP = '|'
+
+/** Reference fill-up used to translate the % surcharge into money in P7. Adjust to the real price. */
+export const REFERENCE_FILL_USD = 15
+
+const money = (pct: number) => {
+  const v = (REFERENCE_FILL_USD * pct) / 100
+  return `≈ $${v.toFixed(2).replace('.', ',')} en una carga de $${REFERENCE_FILL_USD}`
 }
 
 export const QUESTIONS: Question[] = [
+  // ----------------------------------------------------------------- A. Perfil
   {
-    id: 'p1',
-    title: 'Frecuencia de abastecimiento',
-    subtitle: '¿Cada cuánto carga gasolina?',
+    id: 'uso',
+    block: 'Perfil',
+    title: '¿Cómo usa este vehículo?',
     options: [
-      { value: 'diario', label: 'Diario', hint: 'Transporte / Chófer / Delivery' },
-      { value: '2-3_semana', label: '2 a 3 veces por semana' },
-      { value: '1_semana', label: '1 vez por semana' },
-      { value: 'eventual', label: 'Eventual / De paso' },
+      { value: 'particular', label: 'Particular' },
+      { value: 'pasajeros', label: 'Taxi / ruta / transporte de pasajeros' },
+      { value: 'delivery', label: 'Delivery / moto' },
+      { value: 'comercial', label: 'Comercial / empresa' },
     ],
   },
   {
-    id: 'p2',
-    title: 'Tiempo perdido en oficina / pago móvil',
-    subtitle: '¿Cuánto tarda pagando hoy?',
+    id: 'frecuencia',
+    block: 'Perfil',
+    title: '¿Cada cuánto carga gasolina?',
+    options: [
+      { value: 'diario', label: 'Diario' },
+      { value: '2-3_semana', label: '2 a 3 veces por semana' },
+      { value: '1_semana', label: '1 vez por semana' },
+      { value: 'eventual', label: 'Eventual / de paso' },
+    ],
+  },
+  // ------------------------------------------------------------ B. Dolor actual
+  {
+    id: 'tiempo_pago',
+    block: 'Hoy',
+    title: '¿Cuánto tiempo le toma el pago hoy?',
+    subtitle: 'Bajarse, hacer pago móvil, mostrar comprobante, recibir ticket',
     options: [
       { value: '<5', label: 'Menos de 5 minutos' },
       { value: '5-15', label: 'De 5 a 15 minutos' },
@@ -32,34 +70,74 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 'p3',
-    title: 'Intención de uso',
-    subtitle: 'Pagar sin bajarse del vehículo',
+    id: 'molestia',
+    block: 'Hoy',
+    title: '¿Qué es lo más molesto de cargar gasolina hoy?',
+    subtitle: 'Puede marcar hasta 2',
+    multi: true,
+    max: 2,
+    options: [
+      { value: 'bajarse', label: 'Bajarse del carro y hacer fila para pagar' },
+      { value: 'pago_movil', label: 'Fallas del pago móvil / internet en la estación' },
+      { value: 'sin_info', label: 'No saber si hay gasolina antes de llegar' },
+      { value: 'cola', label: 'La espera en la cola en general' },
+      { value: 'nada', label: 'Nada, está bien así' },
+    ],
+  },
+  {
+    id: 'metodo_pago',
+    block: 'Hoy',
+    title: '¿Cómo paga normalmente?',
+    options: [
+      { value: 'pago_movil', label: 'Pago Móvil' },
+      { value: 'usd', label: 'Efectivo (USD)' },
+      { value: 'ves', label: 'Efectivo (Bs)' },
+      { value: 'punto', label: 'Punto de venta / tarjeta' },
+      { value: 'biopago', label: 'Biopago' },
+    ],
+  },
+  // ---------------------------------------------------------------- C. Solución
+  {
+    id: 'intencion',
+    block: 'La app',
+    title: 'Si pudiera pagar desde el carro con una app y recibir el ticket sin bajarse, ¿la usaría?',
     options: [
       { value: 'si', label: 'Definitivamente sí' },
-      { value: 'tal_vez', label: 'Tal vez / Probaría una vez' },
+      { value: 'tal_vez', label: 'Tal vez / la probaría' },
       { value: 'no', label: 'No me interesa' },
     ],
   },
   {
-    id: 'p4',
-    title: 'Disposición a pagar recargo',
-    subtitle: '¿Pagaría algo extra por la comodidad?',
+    id: 'recargo',
+    block: 'La app',
+    title: '¿Cuánto más pagaría por esa comodidad?',
+    subtitle: 'El máximo que aceptaría',
     options: [
-      { value: '5%', label: 'Sí, hasta un 5% adicional' },
-      { value: '3%', label: 'Sí, hasta un 3% adicional' },
-      { value: 'fijo', label: 'Solo un monto fijo pequeño', hint: 'Bolívares / centavos' },
-      { value: 'nada', label: 'No pagaría nada extra' },
+      { value: '5%', label: 'Hasta 5 % más', hint: money(5) },
+      { value: '3%', label: 'Hasta 3 % más', hint: money(3) },
+      { value: 'fijo', label: 'Solo un monto fijo pequeño', hint: 'Unos centavos por carga' },
+      { value: 'nada', label: 'Nada extra' },
     ],
   },
   {
-    id: 'p5',
-    title: 'Método de pago principal hoy',
+    id: 'preocupacion',
+    block: 'La app',
+    title: '¿Qué le preocuparía más al pagar por la app?',
     options: [
-      { value: 'pago_movil', label: 'Pago Móvil' },
-      { value: 'usd', label: 'Efectivo (USD)' },
-      { value: 'ves', label: 'Efectivo (VES)' },
-      { value: 'punto', label: 'Punto de venta / Tarjeta' },
+      { value: 'no_reconocen', label: 'Que no me reconozcan el pago en la bomba' },
+      { value: 'seguridad', label: 'La seguridad de mi dinero o mis datos' },
+      { value: 'internet', label: 'Que falle el internet y me quede sin cargar' },
+      { value: 'nada', label: 'Nada, lo usaría tranquilo' },
+    ],
+  },
+  {
+    id: 'cambiaria',
+    block: 'La app',
+    title: '¿Cambiaría de estación por una que le deje pagar sin bajarse?',
+    options: [
+      { value: 'si_lejos', label: 'Sí, iría a esa aunque quede un poco más lejos' },
+      { value: 'si_cerca', label: 'Solo si queda igual de cerca' },
+      { value: 'no', label: 'No, cargo siempre aquí' },
     ],
   },
 ]
@@ -76,6 +154,31 @@ export type Survey = Answers & {
   plate: string
   whatsapp: string
 }
+
+export const EMPTY_ANSWERS: Answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, ''])) as Answers
+
+export function splitMulti(value: string | undefined): string[] {
+  return value ? value.split(MULTI_SEP).filter(Boolean) : []
+}
+
+/** True when the response has `value` selected for `qid` (works for single and multi). */
+export function hasValue(r: Partial<Answers>, qid: QuestionId, value: string): boolean {
+  return splitMulti(r[qid]).includes(value)
+}
+
+export function labelFor(qid: QuestionId, value: string): string {
+  const q = QUESTIONS.find((x) => x.id === qid)
+  if (!q) return value
+  return splitMulti(value)
+    .map((v) => q.options.find((o) => o.value === v)?.label ?? v)
+    .join(' + ')
+}
+
+// --- Derived KPIs ------------------------------------------------------------
+export const wouldUse = (r: Partial<Answers>) => r.intencion === 'si' || r.intencion === 'tal_vez'
+export const wouldPay = (r: Partial<Answers>) => r.recargo === '5%' || r.recargo === '3%'
+export const wouldSwitch = (r: Partial<Answers>) => r.cambiaria === 'si_lejos' || r.cambiaria === 'si_cerca'
+export const isProfessional = (r: Partial<Answers>) => r.uso === 'pasajeros' || r.uso === 'delivery' || r.uso === 'comercial'
 
 /** Formats seconds as m:ss. */
 export function fmtDuration(sec: number | undefined | null): string {
@@ -105,13 +208,6 @@ export const DURATION_BUCKETS: { label: string; max: number }[] = [
   { label: '1:30 a 2 min', max: 120 },
   { label: 'Más de 2 min', max: Infinity },
 ]
-
-export const EMPTY_ANSWERS: Answers = { p1: '', p2: '', p3: '', p4: '', p5: '' }
-
-export function labelFor(qid: QuestionId, value: string): string {
-  const q = QUESTIONS.find((x) => x.id === qid)
-  return q?.options.find((o) => o.value === value)?.label ?? value
-}
 
 // The app ships with no stations; the interviewer registers them in the app.
 export const DEFAULT_STATIONS: string[] = []
