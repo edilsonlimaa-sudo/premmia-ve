@@ -214,7 +214,8 @@ export function Dashboard({
               question={Q('impacto_bajarse')}
               data={data}
               theme={theme}
-              title="Lo que más les afecta de bajarse a pagar"
+              title="Lo que les afecta de bajarse a pagar"
+              note="Varias respuestas por persona; % sobre entrevistados"
             />
             <DistributionBars
               question={Q('molestia')}

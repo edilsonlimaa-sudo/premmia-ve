@@ -58,7 +58,7 @@ motorista atribui a lentidão da fila à etapa de pagamento. KPI para o posto: "
 bajarse a pagar frena la cola", o argumento de carros atendidos por hora. "No lo había
 pensado" evita induzir a resposta e mostra quanta gente nunca questionou a operação.
 
-**P4. ¿Qué es lo que más le afecta de tener que bajarse a pagar?** (escolha única)
+**P4. ¿Qué le afecta de tener que bajarse a pagar?** (pode marcar várias; "Nada" é exclusiva)
 - El tiempo que pierdo
 - Dejar el carro solo (niños, pertenencias)
 - La fila para pagar y mostrar el comprobante
@@ -66,8 +66,8 @@ pensado" evita induzir a resposta e mostra quanta gente nunca questionou a opera
 - Nada, me da igual
 
 *Por quê:* localiza onde a operação do posto dói. Se o top for "dejar el carro solo" ou
-"inseguridad", o argumento muda: não é só tempo, é tranquilidade. Escolha única para forçar
-prioridade.
+"inseguridad", o argumento muda: não é só tempo, é tranquilidade. Múltipla, para não
+perder a segunda razão; o ranking sai da frequência de cada opção.
 
 **P5. ¿Qué es lo más molesto de cargar gasolina hoy?** (pode marcar várias; "Nada" é exclusiva)
 - Bajarse del carro y hacer fila para pagar
@@ -157,7 +157,7 @@ previsibilidade sobre o funcionamento dele. Mede se a informação move o motori
 
 ## Mudanças no app que isso implica
 
-- Suporte a pergunta de múltipla escolha (só P5), sem limite; "Nada, está bien así" desmarca as outras.
+- Suporte a pergunta de múltipla escolha (P4 e P5), sem limite; "Nada, está bien así" desmarca as outras.
 - Dashboard: card "% irían directo a la estación con gasolina", tabela por tipo de motorista
   (usarían / pagarían / irían directo); gráficos para todas as perguntas.
 - Contador de **"No quiso participar"**: um botão na tela inicial para registrar recusas.

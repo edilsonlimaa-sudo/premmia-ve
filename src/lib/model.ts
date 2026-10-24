@@ -74,8 +74,9 @@ export const QUESTIONS: Question[] = [
   {
     id: 'impacto_bajarse',
     block: 'Hoy',
-    title: '¿Qué es lo que más le afecta de tener que bajarse a pagar?',
-    subtitle: 'Solo una, la que más pesa',
+    title: '¿Qué le afecta de tener que bajarse a pagar?',
+    subtitle: 'Puede marcar varias',
+    multi: true,
     options: [
       { value: 'tiempo', label: 'El tiempo que pierdo' },
       { value: 'carro_solo', label: 'Dejar el carro solo', hint: 'Niños, pertenencias' },
