@@ -1,10 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Copy, Download, Trash2, Users, Smartphone, BadgePercent, Inbox } from 'lucide-react'
+import { Copy, Download, Trash2, Users, Smartphone, BadgePercent, Inbox, Timer } from 'lucide-react'
 import type { Screen } from '../App'
 import type { ToastMsg } from './Toast'
 import { TopBar } from './TopBar'
-import { QUESTIONS, labelFor, type Question, type Survey } from '../lib/model'
+import {
+  DURATION_BUCKETS,
+  QUESTIONS,
+  durationStats,
+  fmtDuration,
+  labelFor,
+  type Question,
+  type Survey,
+} from '../lib/model'
 import { deleteResponse, useResponses, useTheme } from '../lib/storage'
 import { downloadCSV } from '../lib/csv'
 
@@ -116,6 +124,8 @@ export function Dashboard({
               />
             </div>
 
+            <DurationCard data={data} theme={theme} />
+
             <PaymentDonut data={data} theme={theme} />
 
             <DistributionBars question={QUESTIONS[1]} data={data} theme={theme} title="Tiempo perdido en la fila / oficina" />
@@ -213,6 +223,94 @@ function tooltipStyle(theme: 'light' | 'dark') {
     itemStyle: { color: ink.primary },
     labelStyle: { color: ink.secondary, fontWeight: 600 },
   }
+}
+
+function DurationCard({ data, theme }: { data: Survey[]; theme: 'light' | 'dark' }) {
+  const stats = durationStats(data)
+  const ink = INK[theme]
+  if (!stats) {
+    return (
+      <Card>
+        <h2 className="flex items-center gap-2 text-base font-bold">
+          <Timer className="size-5 text-slate-400" /> Duración de la encuesta
+        </h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          Aún no hay respuestas con tiempo medido.
+        </p>
+      </Card>
+    )
+  }
+  const timed = data.filter((r) => typeof r.durationSec === 'number')
+  const buckets = DURATION_BUCKETS.map((b, i) => {
+    const min = i === 0 ? -Infinity : DURATION_BUCKETS[i - 1].max
+    const n = timed.filter((r) => r.durationSec! >= min && r.durationSec! < b.max).length
+    return { ...b, n, pct: pct(n, timed.length) }
+  })
+  // Last 10 timed surveys, oldest → newest, to see whether the interviewer is getting faster.
+  const recent = timed.slice(-10)
+  const recentMax = Math.max(...recent.map((r) => r.durationSec!), 1)
+
+  return (
+    <Card>
+      <h2 className="flex items-center gap-2 text-base font-bold">
+        <Timer className="size-5 text-slate-400" /> Duración de la encuesta
+      </h2>
+      <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+        De Iniciar a Guardar · {stats.n} medidas
+      </p>
+      <div className="mb-4 grid grid-cols-4 gap-2 text-center">
+        <Mini label="Promedio" value={fmtDuration(stats.avg)} strong />
+        <Mini label="Mediana" value={fmtDuration(stats.median)} />
+        <Mini label="Más rápida" value={fmtDuration(stats.min)} />
+        <Mini label="Más lenta" value={fmtDuration(stats.max)} />
+      </div>
+
+      <ul className="flex flex-col gap-1.5">
+        {buckets.map((b) => (
+          <li key={b.label} className="flex items-center gap-2 text-sm">
+            <span className="w-28 shrink-0 text-xs text-slate-600 dark:text-slate-300">{b.label}</span>
+            <span className="relative h-5 flex-1 overflow-hidden rounded" style={{ background: ink.grid, opacity: 1 }}>
+              <span
+                className="absolute inset-y-0 left-0 rounded"
+                style={{ width: `${b.pct}%`, background: SINGLE_HUE[theme] }}
+              />
+            </span>
+            <span className="w-10 text-right text-xs font-semibold tabular-nums">{b.pct}%</span>
+          </li>
+        ))}
+      </ul>
+
+      {recent.length >= 3 && (
+        <>
+          <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Últimas {recent.length} encuestas
+          </p>
+          <div className="flex h-16 items-end gap-1" aria-label="Duración de las últimas encuestas">
+            {recent.map((r) => (
+              <div key={r.id} className="flex flex-1 flex-col items-center gap-0.5" title={`#${r.seq} · ${fmtDuration(r.durationSec)}`}>
+                <span className="text-[10px] tabular-nums text-slate-500 dark:text-slate-400">
+                  {fmtDuration(r.durationSec)}
+                </span>
+                <span
+                  className="w-full rounded-t"
+                  style={{ height: `${Math.max(4, (r.durationSec! / recentMax) * 40)}px`, background: SINGLE_HUE[theme] }}
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </Card>
+  )
+}
+
+function Mini({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className="rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60">
+      <p className={`tabular-nums leading-none ${strong ? 'text-xl font-extrabold' : 'text-lg font-bold'}`}>{value}</p>
+      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+    </div>
+  )
 }
 
 function PaymentDonut({ data, theme }: { data: Survey[]; theme: 'light' | 'dark' }) {

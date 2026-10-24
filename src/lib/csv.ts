@@ -14,6 +14,8 @@ export function toCSV(list: Survey[]): string {
     ...QUESTIONS.flatMap((q) => [`${q.id}_codigo`, `${q.id}_${q.title}`]),
     'placa',
     'whatsapp',
+    'duracion_seg',
+    'inicio_iso',
     'timestamp_iso',
   ]
   const rows = list.map((s) => {
@@ -26,6 +28,8 @@ export function toCSV(list: Survey[]): string {
       ...QUESTIONS.flatMap((q) => [s[q.id], labelFor(q.id, s[q.id])]),
       s.plate,
       s.whatsapp,
+      s.durationSec ?? '',
+      s.startedAt ?? '',
       s.createdAt,
     ]
   })

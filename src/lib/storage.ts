@@ -70,6 +70,8 @@ export function addResponse(input: Omit<Survey, 'id' | 'seq' | 'createdAt'>): Su
       ? crypto.randomUUID()
       : `${Date.now()}-${seq}`
   const survey: Survey = { ...input, id, seq, createdAt: new Date().toISOString() }
+  if (survey.durationSec === undefined) delete survey.durationSec
+  if (survey.startedAt === undefined) delete survey.startedAt
   setResponses([...list, survey])
   return survey
 }

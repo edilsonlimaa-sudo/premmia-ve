@@ -30,8 +30,9 @@ teléfono hay que servirla por HTTPS.
 ## Pantallas
 
 1. **Inicio** – estación actual, respuestas de hoy, botones Nueva encuesta / Métricas / Exportar CSV.
-2. **Encuesta** – selector de estación + 5 preguntas de selección única con botones grandes,
-   campos opcionales de placa y WhatsApp, botón "Guardar y siguiente" que limpia y vuelve a P1.
+2. **Encuesta** – portón de inicio (estación + botón "Iniciar encuesta" que arranca el cronómetro),
+   5 preguntas de selección única con botones grandes, campos opcionales de placa y WhatsApp,
+   botón "Guardar y siguiente" que graba la duración (de Iniciar a Guardar) y vuelve al portón.
 3. **Métricas / Reporte** – KPIs (entrevistados, % usarían la app, % pagarían 3–5 %), rosca de
    métodos de pago, barras de tiempo perdido / intención / recargo / frecuencia, tabla de leads
    con copiar, filtro por estación y exportar CSV.

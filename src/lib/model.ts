@@ -70,10 +70,41 @@ export type Survey = Answers & {
   id: string
   seq: number
   station: string
-  createdAt: string // ISO timestamp
+  createdAt: string // ISO timestamp (when saved)
+  startedAt?: string // ISO timestamp (when the interviewer pressed "Iniciar")
+  durationSec?: number // seconds between start and save
   plate: string
   whatsapp: string
 }
+
+/** Formats seconds as m:ss. */
+export function fmtDuration(sec: number | undefined | null): string {
+  if (sec == null || !Number.isFinite(sec)) return '—'
+  const s = Math.max(0, Math.round(sec))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+export function durationStats(list: { durationSec?: number }[]) {
+  const d = list.map((r) => r.durationSec).filter((x): x is number => typeof x === 'number' && x >= 0)
+  if (d.length === 0) return null
+  const sorted = [...d].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return {
+    n: d.length,
+    avg: d.reduce((a, b) => a + b, 0) / d.length,
+    median: sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2,
+    min: sorted[0],
+    max: sorted[sorted.length - 1],
+  }
+}
+
+export const DURATION_BUCKETS: { label: string; max: number }[] = [
+  { label: 'Menos de 45 s', max: 45 },
+  { label: '45 s a 1 min', max: 60 },
+  { label: '1 a 1:30 min', max: 90 },
+  { label: '1:30 a 2 min', max: 120 },
+  { label: 'Más de 2 min', max: Infinity },
+]
 
 export const EMPTY_ANSWERS: Answers = { p1: '', p2: '', p3: '', p4: '', p5: '' }
 

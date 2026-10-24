@@ -6,6 +6,7 @@ import { TopBar } from './TopBar'
 import { StationPicker } from './StationPicker'
 import { isToday, useCurrentStation, useResponses } from '../lib/storage'
 import { downloadCSV } from '../lib/csv'
+import { durationStats, fmtDuration } from '../lib/model'
 
 export function Home({
   go,
@@ -73,9 +74,10 @@ export function Home({
 
         <StationPicker allowRemove />
 
-        <div className="grid grid-cols-2 gap-3">
-          <Stat label="Hoy" value={today.length} />
-          <Stat label="Total acumulado" value={responses.length} />
+        <div className="grid grid-cols-3 gap-2.5">
+          <Stat label="Hoy" value={String(today.length)} />
+          <Stat label="Total" value={String(responses.length)} />
+          <Stat label="Tiempo prom. hoy" value={fmtDuration(durationStats(today)?.avg)} />
         </div>
 
         <button
@@ -128,11 +130,11 @@ export function Home({
   )
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="text-3xl font-extrabold tabular-nums">{value}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-800">
+      <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-2xl font-extrabold tabular-nums">{value}</p>
     </div>
   )
 }
