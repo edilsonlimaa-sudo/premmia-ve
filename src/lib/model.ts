@@ -74,9 +74,8 @@ export const QUESTIONS: Question[] = [
     id: 'molestia',
     block: 'Hoy',
     title: '¿Qué es lo más molesto de cargar gasolina hoy?',
-    subtitle: 'Puede marcar hasta 2',
+    subtitle: 'Puede marcar varias',
     multi: true,
-    max: 2,
     options: [
       { value: 'bajarse', label: 'Bajarse del carro y hacer fila para pagar' },
       { value: 'pago_movil', label: 'Fallas del pago móvil / internet en la estación' },

@@ -51,7 +51,7 @@ Hoje isso está misturado dentro da opção "Diario (Transporte / Chófer / Deli
 
 *Por quê:* é exatamente o pedaço que o app elimina. Mantida da v1.
 
-**P4. ¿Qué es lo más molesto de cargar gasolina hoy?** (pode marcar até 2)
+**P4. ¿Qué es lo más molesto de cargar gasolina hoy?** (pode marcar várias; "Nada" é exclusiva)
 - Bajarse del carro y hacer fila para pagar
 - Fallas del pago móvil / internet en la estación
 - No saber si hay gasolina antes de llegar
@@ -139,7 +139,7 @@ previsibilidade sobre o funcionamento dele. Mede se a informação move o motori
 
 ## Mudanças no app que isso implica
 
-- Suporte a pergunta de múltipla escolha (só P4), com limite de 2 marcações.
+- Suporte a pergunta de múltipla escolha (só P4), sem limite; "Nada, está bien así" desmarca as outras.
 - Dashboard: card "% irían directo a la estación con gasolina", tabela por tipo de motorista
   (usarían / pagarían / irían directo); gráficos para todas as perguntas.
 - Contador de **"No quiso participar"**: um botão na tela inicial para registrar recusas.

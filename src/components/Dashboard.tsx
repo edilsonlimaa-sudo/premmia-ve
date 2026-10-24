@@ -196,7 +196,7 @@ export function Dashboard({
               data={data}
               theme={theme}
               title="Lo más molesto de cargar hoy"
-              note="Hasta 2 respuestas por persona; % sobre entrevistados"
+              note="Varias respuestas por persona; % sobre entrevistados"
             />
             <DistributionBars
               question={Q('info_hoy')}
