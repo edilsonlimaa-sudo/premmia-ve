@@ -31,19 +31,20 @@ teléfono hay que servirla por HTTPS.
 
 1. **Inicio** – estación actual, respuestas de hoy, botones Nueva encuesta / Métricas / Exportar CSV.
 2. **Encuesta** – portón de inicio (estación, botón "Iniciar encuesta" que arranca el cronómetro y
-   botón "No quiso participar" para la tasa de respuesta), 9 preguntas en 4 bloques (perfil, hoy,
+   botón "No quiso participar" para la tasa de respuesta), 10 preguntas en 4 bloques (perfil, hoy,
    la app, lead) con botones grandes — una de ellas de selección múltiple —, campos opcionales de
    placa y WhatsApp, y "Guardar y siguiente" que graba la duración y vuelve al portón.
    El diseño y la justificación de cada pregunta están en `docs/propuesta-encuesta-v2.md`.
 3. **Métricas / Reporte** – KPIs (entrevistados y tasa de respuesta, % usarían la app, % pagarían
-   3–5 %, % cambiarían de estación), tabla por tipo de conductor, duración de la encuesta, barras
+   3–5 %, % irían directo a la estación que la app muestre con gasolina), tabla por tipo de
+   conductor, duración de la encuesta, barras
    por pregunta, rosca de métodos de pago, leads con copiar, filtro por estación y exportar CSV.
 4. **Ajustes** (engranaje en inicio) – estado de los datos y **Zona de peligro**: borrar todas las
    respuestas o restablecer la app por completo. Cada acción exige escribir `BORRAR` para confirmar.
 
 ## Datos
 
-- Clave `encuesta:responses:v2` en localStorage (array JSON de respuestas con timestamp ISO, estación
+- Clave `encuesta:responses:v3` en localStorage (array JSON de respuestas con timestamp ISO, estación
   y duración); `encuesta:refusals:v1` guarda las negativas.
 - El CSV usa `;` como separador y BOM UTF-8 para abrirse en columnas en Excel en español/portugués.
   La pregunta múltiple exporta los códigos unidos por `|` y las etiquetas por ` + `.

@@ -5,11 +5,12 @@ export type QuestionId =
   | 'frecuencia'
   | 'tiempo_pago'
   | 'molestia'
+  | 'info_hoy'
   | 'metodo_pago'
   | 'intencion'
   | 'recargo'
   | 'preocupacion'
-  | 'cambiaria'
+  | 'iria_directo'
 
 export type Question = {
   id: QuestionId
@@ -85,6 +86,17 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
+    id: 'info_hoy',
+    block: 'Hoy',
+    title: '¿Cómo se entera hoy de dónde hay gasolina?',
+    options: [
+      { value: 'whatsapp', label: 'Grupos de WhatsApp / redes' },
+      { value: 'pasando', label: 'Pasando por la bomba a ver' },
+      { value: 'aviso', label: 'Me avisa un amigo o chofer' },
+      { value: 'nada', label: 'No me entero, voy y pruebo' },
+    ],
+  },
+  {
     id: 'metodo_pago',
     block: 'Hoy',
     title: '¿Cómo paga normalmente?',
@@ -131,13 +143,13 @@ export const QUESTIONS: Question[] = [
     ],
   },
   {
-    id: 'cambiaria',
+    id: 'iria_directo',
     block: 'La app',
-    title: '¿Cambiaría de estación por una que le deje pagar sin bajarse?',
+    title: 'Si una app le dijera, antes de salir, qué estación tiene gasolina ahora y cuánta cola hay, ¿qué haría?',
     options: [
-      { value: 'si_lejos', label: 'Sí, iría a esa aunque quede un poco más lejos' },
-      { value: 'si_cerca', label: 'Solo si queda igual de cerca' },
-      { value: 'no', label: 'No, cargo siempre aquí' },
+      { value: 'directo', label: 'Iría directo a esa estación' },
+      { value: 'miraria', label: 'Lo miraría, pero cargo donde me quede de paso' },
+      { value: 'nada', label: 'No me cambiaría nada' },
     ],
   },
 ]
@@ -177,7 +189,10 @@ export function labelFor(qid: QuestionId, value: string): string {
 // --- Derived KPIs ------------------------------------------------------------
 export const wouldUse = (r: Partial<Answers>) => r.intencion === 'si' || r.intencion === 'tal_vez'
 export const wouldPay = (r: Partial<Answers>) => r.recargo === '5%' || r.recargo === '3%'
-export const wouldSwitch = (r: Partial<Answers>) => r.cambiaria === 'si_lejos' || r.cambiaria === 'si_cerca'
+/** The info-driven KPI: drivers the app could steer to a station that reports fuel + queue. */
+export const wouldGoDirect = (r: Partial<Answers>) => r.iria_directo === 'directo'
+/** Drivers who today have no channel with the station (find out by passing by or trying). */
+export const noInfoChannel = (r: Partial<Answers>) => r.info_hoy === 'pasando' || r.info_hoy === 'nada'
 export const isProfessional = (r: Partial<Answers>) => r.uso === 'pasajeros' || r.uso === 'delivery' || r.uso === 'comercial'
 
 /** Formats seconds as m:ss. */

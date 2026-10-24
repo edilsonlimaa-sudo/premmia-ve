@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { DEFAULT_STATIONS, type Survey } from './model'
 
-const KEY_RESPONSES = 'encuesta:responses:v2'
+const KEY_RESPONSES = 'encuesta:responses:v3'
 const KEY_REFUSALS = 'encuesta:refusals:v1'
 const KEY_STATIONS = 'encuesta:stations:v1'
 const KEY_STATION = 'encuesta:current-station:v1'

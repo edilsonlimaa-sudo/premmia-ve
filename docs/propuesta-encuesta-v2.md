@@ -11,7 +11,12 @@ Baseada em `contexto-ideia.md`. Objetivo da enquete, pelo que você descreveu:
 A enquete atual cobre 1, 2 e 4 de forma rasa. O que falta é o que mais pesa para o dono do
 posto: *ele ganha ou perde cliente com isso?* e *qual é a dor real do pagamento hoje?*
 
-Tempo alvo por entrevista: 60 a 90 segundos (9 toques + leads). Na fila isso é tranquilo.
+Tempo alvo por entrevista: 60 a 90 segundos (10 toques + leads). Na fila isso é tranquilo.
+
+> **Revisão (v2.1):** a P9 original ("¿cambiaría de estación?") foi descartada. Na Venezuela
+> o motorista carrega onde tem gasolina na hora, não existe fidelidade a um posto. O que
+> direciona tráfego é **informação** (onde tem gasolina e quanta fila), que o posto fornece em
+> troca do serviço. A P9 passou a medir isso e entrou a P6 sobre como o motorista se informa hoje.
 
 ---
 
@@ -57,7 +62,17 @@ Hoje isso está misturado dentro da opção "Diario (Transporte / Chófer / Deli
 desabastecimento. A opção de "no saber si hay gasolina" valida a sua ideia original de
 visibilidade. Única pergunta de múltipla escolha.
 
-**P5. ¿Cómo paga normalmente?**
+**P5. ¿Cómo se entera hoy de dónde hay gasolina?**
+- Grupos de WhatsApp / redes
+- Pasando por la bomba a ver
+- Me avisa un amigo o chofer
+- No me entero, voy y pruebo
+
+*Por quê:* mostra ao posto que hoje ele não tem canal nenhum com o motorista. Se a maioria
+responde "pasando a ver" ou "voy y pruebo", o argumento "me dá seus dados de funcionamento e
+eu viro seu canal" fica pronto.
+
+**P6. ¿Cómo paga normalmente?**
 - Pago Móvil
 - Efectivo (USD)
 - Efectivo (Bs)
@@ -69,12 +84,12 @@ banco). Adicionei Biopago porque é comum em postos na Venezuela.
 
 ### Bloco C – A solução
 
-**P6. Si pudiera pagar desde el carro con una app y recibir el ticket sin bajarse, ¿la usaría?**
+**P7. Si pudiera pagar desde el carro con una app y recibir el ticket sin bajarse, ¿la usaría?**
 - Definitivamente sí
 - Tal vez / la probaría
 - No me interesa
 
-**P7. ¿Cuánto más pagaría por esa comodidad?** (o máximo que aceita)
+**P8. ¿Cuánto más pagaría por esa comodidad?** (o máximo que aceita)
 - Hasta 5 % más (≈ $0,75 en una carga de $15)
 - Hasta 3 % más (≈ $0,45 en una carga de $15)
 - Solo un monto fijo pequeño (unos centavos)
@@ -83,7 +98,7 @@ banco). Adicionei Biopago porque é comum em postos na Venezuela.
 *Por quê:* o exemplo em dinheiro evita que a pessoa rejeite "5%" por reflexo. O valor de
 referência da carga (US$ 15) fica configurável no código para você ajustar ao preço real.
 
-**P8. ¿Qué le preocuparía más al pagar por la app?**
+**P9. ¿Qué le preocuparía más al pagar por la app?**
 - Que no me reconozcan el pago en la bomba
 - La seguridad de mi dinero o mis datos
 - Que falle el internet y me quede sin cargar
@@ -92,14 +107,14 @@ referência da carga (US$ 15) fica configurável no código para você ajustar a
 *Por quê:* define o que o produto precisa resolver primeiro (ex.: confirmação visível ao
 frentista pela placa) e dá ao dono do posto a resposta pronta para a objeção dele.
 
-**P9. ¿Cambiaría de estación por una que le deje pagar sin bajarse?**
-- Sí, iría a esa aunque quede un poco más lejos
-- Solo si queda igual de cerca
-- No, cargo siempre aquí
+**P10. Si una app le dijera, antes de salir, qué estación tiene gasolina ahora y cuánta cola hay, ¿qué haría?**
+- Iría directo a esa estación
+- Lo miraría, pero cargo donde me quede de paso
+- No me cambiaría nada
 
-*Por quê:* **é o número que fecha o posto.** "X% dos seus clientes iriam para o concorrente
-que tiver isso" é o argumento mais forte que você pode levar na reunião. Também mede o
-risco para quem não adotar.
+*Por quê:* **é o número que fecha o posto.** "X% dos motoristas iriam direto ao posto que a
+app mostrar com gasolina e pouca fila" é exatamente o que o dono ganha ao te dar
+previsibilidade sobre o funcionamento dele. Mede se a informação move o motorista.
 
 ### Bloco D – Lead (opcional, como hoje)
 
@@ -118,20 +133,21 @@ risco para quem não adotar.
 | P5 Método de pago | P5 + Biopago |
 | P3 Intención | P6 (texto mais concreto) |
 | P4 Recargo | P7 com exemplo em dinheiro |
-| — | P8 Preocupación (nova) |
-| — | P9 Cambiaría de estación (nova) |
+| — | P5 Cómo se entera hoy (nova) |
+| — | P9 Preocupación (nova) |
+| — | P10 Iría directo con información (nova) |
 
 ## Mudanças no app que isso implica
 
 - Suporte a pergunta de múltipla escolha (só P4), com limite de 2 marcações.
-- Dashboard: novos cards "% cambiaría de estación" e "% profissionais que pagariam 3–5 %";
-  gráficos para P4, P8 e P9; cruzamento intenção × tipo de uso.
+- Dashboard: card "% irían directo a la estación con gasolina", tabela por tipo de motorista
+  (usarían / pagarían / irían directo); gráficos para todas as perguntas.
 - Contador de **"No quiso participar"**: um botão na tela inicial para registrar recusas.
   Isso deixa você dizer "abordei 400, 300 responderam", o que dá credibilidade ao dado.
 - Como o app ainda não está em produção, os IDs das perguntas mudam sem migração.
 
 ## Sugestão de abordagem (não é parte do app)
 
-"Buenas, estoy haciendo un estudio de mercado sobre el pago en las bombas, son 9 preguntas de
+"Buenas, estoy haciendo un estudio de mercado sobre el pago en las bombas, son 10 preguntas de
 un minuto, ¿me ayuda?" Fazer de dentro do carro dele, enquanto a fila anda. Começar pelo
 bloco B (a dor) para o motorista se engajar antes de ouvir a solução.

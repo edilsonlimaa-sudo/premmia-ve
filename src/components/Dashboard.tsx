@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Bar, BarChart, Cell, LabelList, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import {
-  ArrowLeftRight,
   BadgePercent,
+  Navigation,
   Copy,
   Download,
   Inbox,
@@ -21,8 +21,9 @@ import {
   fmtDuration,
   hasValue,
   labelFor,
+  noInfoChannel,
+  wouldGoDirect,
   wouldPay,
-  wouldSwitch,
   wouldUse,
   type Question,
   type QuestionId,
@@ -77,8 +78,9 @@ export function Dashboard({
   const nUseSure = data.filter((r) => r.intencion === 'si').length
   const nPay = data.filter(wouldPay).length
   const nPay5 = data.filter((r) => r.recargo === '5%').length
-  const nSwitch = data.filter(wouldSwitch).length
-  const nSwitchFar = data.filter((r) => r.cambiaria === 'si_lejos').length
+  const nDirect = data.filter(wouldGoDirect).length
+  const nLook = data.filter((r) => r.iria_directo === 'miraria').length
+  const nNoChannel = data.filter(noInfoChannel).length
   const leads = data.filter((r) => r.plate || r.whatsapp)
   const todayN = data.filter((r) => isToday(r.createdAt)).length
 
@@ -163,10 +165,10 @@ export function Dashboard({
                 sub={`${pct(nPay5, total)}% hasta 5 %`}
               />
               <Kpi
-                icon={<ArrowLeftRight className="size-5" />}
-                label="Cambiarían de estación"
-                value={`${pct(nSwitch, total)}%`}
-                sub={`${pct(nSwitchFar, total)}% aunque quede más lejos`}
+                icon={<Navigation className="size-5" />}
+                label="Irían directo a la estación con gasolina"
+                value={`${pct(nDirect, total)}%`}
+                sub={`+${pct(nLook, total)}% lo mirarían · ${pct(nNoChannel, total)}% hoy va a probar suerte`}
                 accent
               />
             </div>
@@ -179,7 +181,12 @@ export function Dashboard({
             <SectionTitle>La app</SectionTitle>
             <DistributionBars question={Q('intencion')} data={data} theme={theme} />
             <DistributionBars question={Q('recargo')} data={data} theme={theme} title="Recargo máximo que pagarían" />
-            <DistributionBars question={Q('cambiaria')} data={data} theme={theme} />
+            <DistributionBars
+              question={Q('iria_directo')}
+              data={data}
+              theme={theme}
+              title="Si la app mostrara dónde hay gasolina y cuánta cola"
+            />
             <DistributionBars question={Q('preocupacion')} data={data} theme={theme} title="Principal preocupación" />
 
             {/* ---------------------------------------------------------- Hoy */}
@@ -190,6 +197,13 @@ export function Dashboard({
               theme={theme}
               title="Lo más molesto de cargar hoy"
               note="Hasta 2 respuestas por persona; % sobre entrevistados"
+            />
+            <DistributionBars
+              question={Q('info_hoy')}
+              data={data}
+              theme={theme}
+              title="Cómo se enteran hoy de dónde hay gasolina"
+              note="La estación no tiene canal con quienes pasan a ver o van a probar"
             />
             <DistributionBars question={Q('tiempo_pago')} data={data} theme={theme} title="Tiempo que les toma el pago" />
             <PaymentDonut data={data} theme={theme} />
@@ -310,7 +324,7 @@ function DriverTypeTable({ data }: { data: Survey[] }) {
       n: sub.length,
       use: pct(sub.filter(wouldUse).length, sub.length),
       pay: pct(sub.filter(wouldPay).length, sub.length),
-      sw: pct(sub.filter(wouldSwitch).length, sub.length),
+      sw: pct(sub.filter(wouldGoDirect).length, sub.length),
     }
   })
   return (
@@ -324,7 +338,7 @@ function DriverTypeTable({ data }: { data: Survey[] }) {
             <th className="pb-1 text-right font-semibold">n</th>
             <th className="pb-1 text-right font-semibold">Usarían</th>
             <th className="pb-1 text-right font-semibold">Pagarían</th>
-            <th className="pb-1 text-right font-semibold">Cambiarían</th>
+            <th className="pb-1 text-right font-semibold">Irían directo</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
