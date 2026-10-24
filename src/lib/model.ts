@@ -82,4 +82,5 @@ export function labelFor(qid: QuestionId, value: string): string {
   return q?.options.find((o) => o.value === value)?.label ?? value
 }
 
-export const DEFAULT_STATIONS = ['Ugarte Pelayo', 'Estación B', 'Estación C']
+// The app ships with no stations; the interviewer registers them in the app.
+export const DEFAULT_STATIONS: string[] = []

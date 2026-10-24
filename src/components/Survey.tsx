@@ -35,7 +35,8 @@ export function Survey({
   const topRef = useRef<HTMLDivElement | null>(null)
 
   const answered = QUESTIONS.filter((q) => answers[q.id]).length
-  const complete = answered === QUESTIONS.length
+  const hasStation = station.trim().length > 0
+  const complete = answered === QUESTIONS.length && hasStation
 
   const select = (qid: QuestionId, value: string) => {
     vibrate()
@@ -67,7 +68,7 @@ export function Survey({
     <>
       <TopBar
         title="Nueva encuesta"
-        subtitle={`${station} · ${todayCount} hoy`}
+        subtitle={`${station || 'Sin estación'} · ${todayCount} hoy`}
         onBack={() => go('home')}
         right={
           <span className="mr-1 rounded-full bg-slate-100 px-3 py-1 text-sm font-bold tabular-nums text-slate-700 dark:bg-slate-800 dark:text-slate-200">
@@ -208,7 +209,11 @@ export function Survey({
             className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-brand-600 text-xl font-extrabold tracking-wide text-white shadow-lg shadow-brand-600/30 transition-all active:scale-[0.98] active:bg-brand-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
           >
             <Save className="size-7" />
-            {complete ? 'GUARDAR Y SIGUIENTE' : `Faltan ${QUESTIONS.length - answered} respuestas`}
+            {complete
+              ? 'GUARDAR Y SIGUIENTE'
+              : answered < QUESTIONS.length
+                ? `Faltan ${QUESTIONS.length - answered} respuestas`
+                : 'Selecciona la estación'}
           </button>
         </div>
       </div>

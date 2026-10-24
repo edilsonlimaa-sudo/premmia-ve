@@ -43,7 +43,7 @@ export function Home({
   return (
     <>
       <TopBar
-        title={`Posto: ${station || '—'}`}
+        title={station ? `Posto: ${station}` : 'Sin estación seleccionada'}
         subtitle={
           <>
             Hoy: <strong className="text-slate-800 dark:text-slate-100">{today.length}</strong>{' '}
@@ -61,7 +61,7 @@ export function Home({
           </div>
         )}
 
-        <StationPicker />
+        <StationPicker allowRemove />
 
         <div className="grid grid-cols-2 gap-3">
           <Stat label="Hoy" value={today.length} />

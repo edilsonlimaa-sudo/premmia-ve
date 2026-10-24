@@ -105,6 +105,13 @@ export function addStation(name: string) {
   setCurrentStation(clean)
 }
 
+export function removeStation(name: string) {
+  const list = getStations().filter((s) => s !== name)
+  stationsCache = list
+  write(KEY_STATIONS, list)
+  if (getCurrentStation() === name) setCurrentStation(list[0] ?? '')
+}
+
 export function useStations(): string[] {
   return useSyncExternalStore(subscribe, getStations, getStations)
 }
