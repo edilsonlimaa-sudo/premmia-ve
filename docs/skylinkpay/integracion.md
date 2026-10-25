@@ -5,8 +5,15 @@
 
 ## 1. O que a SkyLinkPay faz para nós
 
+> **Modelo: checkout hospedado** (como Mercado Pago Checkout Pro / Stripe Checkout). Não é uma
+> API para montar o nosso próprio checkout: a tela de pagamento é deles, o nosso app cria a
+> cobrança, abre a página e depois confirma o status. Conclusão de 2026-10-24: serve para o
+> piloto no posto (o valor está na placa + status para o bombero, não na tela de pagamento).
+> Pergunta prioritária: existe API de débito direto (C2P / código SMS) para pagar dentro do app?
+
 - Checkout hospedado: criamos uma cobrança via API, recebemos um `token` e uma `url`
-  (`/pay/{token}`); o pagador abre a URL e paga lá (Pago Móvil; outros meios **pendente**).
+  (`/pay/{token}`); o pagador abre a URL e paga lá (Pago Móvil ou código por SMS, ver §6).
+  Pode abrir numa webview/aba interna do nosso app e voltar pela URL de retorno.
 - Conciliação: a SkyLinkPay confirma o pagamento e nos avisa por webhook na "URL de
   notificaciones" configurada no painel. Também dá para consultar por token.
 - Liquidação: cai na conta bancária configurada no painel (banco + número de conta).
@@ -343,6 +350,9 @@ Existem no painel; regras e prazos a descobrir.
 
 ## 9. Perguntas em aberto para a SkyLinkPay
 
+- [ ] **Prioritária:** existe API para cobrar sem passar pelo checkout hospedado (C2P / "pago con
+      código al teléfono" direto, ou Pago Móvil P2P com conciliação por referência)? A resposta
+      por token traz `paymentMethod: pago_movil_p2p` e `paymentTypeCode: P2P`.
 - [ ] Rotas exatas de Listar, Consultar (id), Reembolsar, Anular, Tasa BCV e `/merchants/me`.
 - [x] ~~Como assinar um GET~~ → linha 4 = `null`, sem body.
 - [x] ~~Rota de consultar por token~~ → `GET /api/v1/merchant/transactions/token/{token}`.
