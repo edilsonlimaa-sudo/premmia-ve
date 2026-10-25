@@ -170,6 +170,12 @@ Response (200):
 Guardar `data.id`, `data.token` e `data.url`. Respostas de erro (formato, códigos HTTP,
 assinatura inválida): **(pendente)**.
 
+**Confirmado na prática (2026-10-24, POC):** a chamada real respondeu `HTTP 201` em ~3,8 s com a
+assinatura aceita de primeira. O `token` real tem 64 hex. Além do exemplo do painel, a resposta
+trouxe `settlementStatus: null`, `mdrRateBps: 290`, `partnerCommissionAmount: 0`,
+`withholdingRateBps: 0`, `vesAmount`, `createdAt` e `updatedAt`. Não devolve `installments`
+diferente de 1 nem campos do pagador (ainda não pagou).
+
 ### 5.2 Consultar por token — `GET /api/v1/merchant/transactions/token/{token}`
 
 Busca a cobrança pelo token do checkout (o mesmo da URL `/pay/{token}`). Sem corpo; assinar com
@@ -233,7 +239,7 @@ Campos além dos de criação:
 - **Timeout de 10 segundos.** Se a nossa URL não responder nesse tempo, o painel devolve
   `{"success": false, "message": "El webhook no respondió en 10 segundos.", "data": null}`.
   Regra para a POC: responder `200` imediatamente e processar depois.
-- Receptor da POC: `poc/skylinkpay/webhook-receiver.js` (`npm run webhook`) registra cabeçalhos e
+- Receptor da POC: `POST /webhook` em `poc/skylinkpay/server.js` (`npm run dev`) registra cabeçalhos e
   corpo em `webhooks.log`. Para o painel alcançá-lo é preciso um túnel público
   (`npm run tunnel` usa localtunnel) e colar a URL gerada em "URL de notificaciones".
 
@@ -285,7 +291,22 @@ Existem no painel; regras e prazos a descobrir.
 
 ## 6. Checkout e painel
 
-- A página `/pay/{token}` mostra logo e nome do comércio, "Paga con Skylink Pay".
+- A página `/pay/{token}` mostra o nome e o RIF/cédula do comércio, o valor ("Monto total a pagar
+  Bs. 25,00 · Pago en Bs. · Moneda local"), o número do pedido (`buyOrder`) e "Pago seguro".
+- **Expira em ~15 minutos**: o checkout mostra "Tiempo restante para pagar" começando perto de
+  14:00 logo após criar. Isso responde ao tempo de `expirable: true`. Para a bomba é suficiente,
+  mas o app deve criar a cobrança só quando o motorista já estiver na fila.
+- **Dois meios de pagamento** (dev, 2026-10-24):
+  1. **Pago Móvil**: "paga desde la app de tu banco y luego avísanos aquí". O pagador faz o
+     Pago Móvil no banco dele e confirma no checkout. Como a SkyLinkPay concilia isso é a parte
+     que interessa **(observar no primeiro pagamento real)**.
+  2. **Pago con código al teléfono (SMS)**: telefone da conta, cédula, banco e nome; chega um
+     código por SMS e o pagamento sai da conta. É o débito imediato tipo C2P.
+- Lista de bancos no checkout: BCV, Venezuela, Venezolano de Crédito, Mercantil, Provincial,
+  Bancaribe, Exterior, Caroní, Banesco, Sofitasa, Plaza, Bangente, BFC, 100% Banco, Delsur,
+  Tesoro, Agrícola, Bancrecer, R4, Activo, Bancamiga, BID, Banplus, Digital de los Trabajadores,
+  Banfanb, N58, BNC, IMCP.
+- Link "Cancelar pago y volver a la tienda" → provavelmente a URL de retorno **(confirmar)**.
 - URL de retorno: para onde o **navegador do pagador** é redirecionado ao terminar no checkout.
   Padrão `https://skylinkpay.valinkgroup.com/pago-exitoso`; podemos apontar para uma página
   nossa (ex.: "recibimos tu pago, muestra la placa al bombero"). É experiência de usuário, **não
@@ -326,9 +347,9 @@ Existem no painel; regras e prazos a descobrir.
 - [ ] Webhook: os eventos de pagamento são assinados? (o de teste não traz assinatura). Quais
       `eventType` existem e qual é o payload da transação? Política de reentrega?
 - [ ] Lista completa de `status` e `resultCode` e qual significa "dinheiro confirmado".
-- [ ] Tempo de expiração de uma cobrança `expirable: true`.
+- [x] ~~Tempo de expiração de uma cobrança `expirable: true`~~ → ~15 min (cronômetro do checkout).
+- [x] ~~Meios de pagamento no checkout~~ → Pago Móvil (avisa depois de pagar) e código por SMS.
 - [ ] `amount` em USD é em centavos?
-- [ ] Meios de pagamento disponíveis no checkout (só Pago Móvil?).
 - [ ] URL base e credenciais de produção; existe sandbox com dinheiro fictício?
 - [ ] Um login pode administrar vários comércios (um por posto)?
 - [ ] URL de retorno: o redirecionamento leva parâmetros (token, status, buyOrder)? Existe URL
@@ -342,3 +363,4 @@ Existem no painel; regras e prazos a descobrir.
 | 2026-10-24 | Credenciais ficam em `poc/skylinkpay/.env` (ignorado pelo git); docs usam `<API_KEY>` / `<COMMERCE_CODE>`. | Repositório público no GitHub. |
 | 2026-10-24 | POC será um serviço Node separado em `poc/skylinkpay`, não dentro do PWA. | Assinatura HMAC exige a apiKey no servidor; webhook precisa de endpoint público. |
 | 2026-10-24 | O webhook é aviso, não prova: a placa só vira "pagada" após confirmar por consulta à API. | O evento de teste chegou sem assinatura; qualquer um que descubra a URL poderia forjar um POST. |
+| 2026-10-24 | App POC "Pago desde el carro" em `poc/skylinkpay` (`npm run dev`): telas Conductor e Bombero, API própria, polling a cada 4 s por token. | Ver o fluxo ponta a ponta antes de desenhar o produto. Primeira cobrança real criada no dev: `HTTP 201`, checkout aberto. |

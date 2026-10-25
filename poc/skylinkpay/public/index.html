@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Pago desde el carro · POC</title>
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">⛽ Pago desde el carro <span class="tag">POC · SkyLinkPay dev</span></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="conductor" role="tab" aria-selected="true">🚗 Conductor</button>
+      <button class="tab" data-view="bombero" role="tab" aria-selected="false">🧑‍🔧 Bombero</button>
+    </nav>
+  </header>
+
+  <!-- ===================================================== CONDUCTOR -->
+  <main id="view-conductor" class="view">
+    <section class="card" id="c-form">
+      <h2>Paga antes de llegar a la bomba</h2>
+      <p class="muted">Genera el cobro, paga con Pago Móvil desde el carro y muestra la placa al bombero.</p>
+      <label>Placa del vehículo
+        <input id="c-placa" placeholder="AB123CD" autocapitalize="characters" autocomplete="off" maxlength="10" />
+      </label>
+      <label>Monto en bolívares
+        <input id="c-monto" type="number" inputmode="decimal" min="1" step="0.01" value="25" />
+      </label>
+      <button id="c-generar" class="primary">Generar cobro</button>
+      <p id="c-error" class="error" hidden></p>
+    </section>
+
+    <section class="card" id="c-cobro" hidden>
+      <div class="row">
+        <div>
+          <p class="muted small">Placa</p>
+          <p class="placa" id="c-cobro-placa"></p>
+        </div>
+        <div class="right">
+          <p class="muted small">Monto</p>
+          <p class="monto" id="c-cobro-monto"></p>
+        </div>
+      </div>
+      <div class="status" id="c-status" data-state="pending">
+        <span class="dot"></span><span id="c-status-text">Pendiente de pago</span>
+      </div>
+      <a id="c-pagar" class="primary btn" target="_blank" rel="noopener">Pagar con Skylink Pay →</a>
+      <p class="muted small">Se abre el checkout de SkyLinkPay. Al volver, esta pantalla se actualiza sola.</p>
+      <div id="c-pagado" class="paid-box" hidden>
+        <div class="check">✓</div>
+        <p><strong>Pago confirmado.</strong> Muestra esta pantalla o solo la placa al bombero.</p>
+        <p class="muted small" id="c-pagado-detalle"></p>
+      </div>
+      <details class="tech">
+        <summary>Detalle técnico</summary>
+        <pre id="c-json"></pre>
+      </details>
+      <button id="c-nuevo" class="ghost">Nuevo cobro</button>
+    </section>
+  </main>
+
+  <!-- ===================================================== BOMBERO -->
+  <main id="view-bombero" class="view" hidden>
+    <section class="card">
+      <h2>¿Esta placa ya pagó?</h2>
+      <form id="b-form">
+        <label>Placa
+          <input id="b-placa" placeholder="AB123CD" autocapitalize="characters" autocomplete="off" maxlength="10" />
+        </label>
+        <button class="primary" type="submit">Consultar</button>
+      </form>
+    </section>
+
+    <section class="card result" id="b-result" hidden>
+      <p class="placa big" id="b-placa-out"></p>
+      <div class="verdict" id="b-verdict"></div>
+      <p class="muted" id="b-detalle"></p>
+    </section>
+
+    <section class="card">
+      <h3>Últimos cobros</h3>
+      <ul class="list" id="b-list"><li class="muted">Cargando…</li></ul>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
