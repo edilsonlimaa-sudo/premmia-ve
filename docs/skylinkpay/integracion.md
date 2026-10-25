@@ -229,8 +229,13 @@ Existem no painel; regras e prazos a descobrir.
 ## 6. Checkout e painel
 
 - A página `/pay/{token}` mostra logo e nome do comércio, "Paga con Skylink Pay".
-- URL de retorno: padrão `https://skylinkpay.valinkgroup.com/pago-exitoso`; podemos apontar
-  para uma página nossa (ex.: tela "pago recibido, muestre la placa").
+- URL de retorno: para onde o **navegador do pagador** é redirecionado ao terminar no checkout.
+  Padrão `https://skylinkpay.valinkgroup.com/pago-exitoso`; podemos apontar para uma página
+  nossa (ex.: "recibimos tu pago, muestra la placa al bombero"). É experiência de usuário, **não
+  confirmação**: qualquer um pode abrir a URL sem pagar, e o pagador pode fechar o navegador
+  antes de chegar nela. A confirmação vem do webhook + consulta por token.
+  Se levar o token como parâmetro **(pendente)**, a página consulta o status e mostra
+  "procesando" até a API confirmar.
 - Dados do comércio no painel: nome, RIF/cédula, telefone, banco e conta de liquidação.
 - Hipótese de produto: um comércio SkyLinkPay por posto (a liquidação cai na conta do posto)
   **(confirmar se um mesmo login pode ter vários comércios; pendente)**.
@@ -267,6 +272,8 @@ Existem no painel; regras e prazos a descobrir.
 - [ ] Meios de pagamento disponíveis no checkout (só Pago Móvil?).
 - [ ] URL base e credenciais de produção; existe sandbox com dinheiro fictício?
 - [ ] Um login pode administrar vários comércios (um por posto)?
+- [ ] URL de retorno: o redirecionamento leva parâmetros (token, status, buyOrder)? Existe URL
+      distinta para pagamento falho/cancelado ou tudo cai na mesma?
 - [ ] Taxa final e split.
 
 ## 10. Decisões da POC
