@@ -170,16 +170,52 @@ assinatura inválida): **(pendente)**.
 Usar para polling do status. Valores possíveis de `status` / `resultCode`: só conhecemos
 `created` / `PENDING` **(lista completa pendente)**.
 
-### 5.3 Webhook (URL de notificaciones) — **(payload pendente)**
-- Configurado no painel, em Configuración → "URL de notificaciones". Tem botão **Probar webhook**
-  que envia um evento de teste sem mover dinheiro: primeira coisa a usar na POC para capturar o
-  payload real.
+### 5.3 Webhook (URL de notificaciones)
+- Configurado no painel, em Configuración → "URL de notificaciones". O botão **Probar webhook**
+  envia um evento de teste sem mover dinheiro.
 - **Timeout de 10 segundos.** Se a nossa URL não responder nesse tempo, o painel devolve
   `{"success": false, "message": "El webhook no respondió en 10 segundos.", "data": null}`.
   Regra para a POC: responder `200` imediatamente e processar depois.
 - Receptor da POC: `poc/skylinkpay/webhook-receiver.js` (`npm run webhook`) registra cabeçalhos e
   corpo em `webhooks.log`. Para o painel alcançá-lo é preciso um túnel público
   (`npm run tunnel` usa localtunnel) e colar a URL gerada em "URL de notificaciones".
+
+**Evento de teste capturado (2026-10-24, via webhook.site):**
+
+- `POST` com `Content-Type: application/json`, `User-Agent: SkylinkPay-Webhook-Test/1.0`.
+- Origem: IP `3.83.34.63`, headers `x-vercel-id` / `x-invocation-id` → o backend deles roda na
+  Vercel (região `pdx1`). O IP pode mudar; **não** filtrar por IP.
+- **Sem assinatura:** nenhum `X-Signature`, `X-Timestamp` ou `X-Api-Key`. Pelo menos o evento de
+  teste não é assinado. Se os eventos de pagamento também não forem, o webhook sozinho **não é
+  prova de pagamento**: tratar como "aviso" e confirmar sempre com **Consultar por token** (5.2)
+  antes de marcar a placa como paga.
+
+```json
+{
+  "eventId": "5965d78c-a469-43c7-ad29-6c05011f4418",
+  "eventType": "webhook.test",
+  "test": true,
+  "sentAt": "2026-10-25T00:27:30.275Z",
+  "merchant": {
+    "id": "<MERCHANT_ID>",
+    "commerceCode": "<COMMERCE_CODE>",
+    "name": "Urbanización Los Frailejones"
+  },
+  "message": "Prueba manual de webhook desde Skylink Pay."
+}
+```
+
+| Campo | Notas |
+|---|---|
+| `eventId` | uuid; usar para idempotência (ignorar repetidos). |
+| `eventType` | `webhook.test` no teste. Tipos de evento de pagamento (ex.: `transaction.paid`?) **(pendente)**. |
+| `test` | `true` no evento de teste; esperar `false` nos reais. |
+| `sentAt` | ISO 8601 UTC. |
+| `merchant` | `id` (uuid interno), `commerceCode`, `name`. Validar que `commerceCode` é o nosso. |
+| `message` | texto livre. |
+| dados da transação | ausentes no teste; esperar algo como `data` / `transaction` com `id`, `token`, `buyOrder`, `status` **(pendente)**. |
+
+- Reentregas e idempotência: **(pendente)**. Guardar `eventId` processados.
 - Payload, cabeçalhos e assinatura do webhook: **(pendente)**. Assumir que precisamos validar
   uma assinatura HMAC com a mesma apiKey até confirmar.
 - Reentregas e idempotência: **(pendente)**. Tratar o webhook como idempotente pelo `data.id`.
@@ -223,7 +259,8 @@ Existem no painel; regras e prazos a descobrir.
 - [ ] Rotas exatas de Listar, Consultar (id), Consultar por token, Reembolsar, Anular, Tasa BCV e `/merchants/me`.
 - [ ] Como assinar um GET (body vazio: linha vazia ou omitida?).
 - [ ] Janela de validade do `X-Timestamp`.
-- [ ] Payload e assinatura do webhook; política de reentrega.
+- [ ] Webhook: os eventos de pagamento são assinados? (o de teste não traz assinatura). Quais
+      `eventType` existem e qual é o payload da transação? Política de reentrega?
 - [ ] Lista completa de `status` e `resultCode` e qual significa "dinheiro confirmado".
 - [ ] Tempo de expiração de uma cobrança `expirable: true`.
 - [ ] `amount` em USD é em centavos?
@@ -238,3 +275,4 @@ Existem no painel; regras e prazos a descobrir.
 |---|---|---|
 | 2026-10-24 | Credenciais ficam em `poc/skylinkpay/.env` (ignorado pelo git); docs usam `<API_KEY>` / `<COMMERCE_CODE>`. | Repositório público no GitHub. |
 | 2026-10-24 | POC será um serviço Node separado em `poc/skylinkpay`, não dentro do PWA. | Assinatura HMAC exige a apiKey no servidor; webhook precisa de endpoint público. |
+| 2026-10-24 | O webhook é aviso, não prova: a placa só vira "pagada" após confirmar por consulta à API. | O evento de teste chegou sem assinatura; qualquer um que descubra a URL poderia forjar um POST. |

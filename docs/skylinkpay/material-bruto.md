@@ -167,7 +167,47 @@ não respondeu. Precisamos de um receptor público para capturar o payload do ev
 
 ---
 
-## Bloco 6
+## Bloco 6 – Evento de teste capturado no webhook.site (print, 2026-10-24 20:27 VET)
+
+Request: `POST https://webhook.site/<id>` · 307 bytes · origem IP 3.83.34.63 (Ashburn, Virginia).
+
+Cabeçalhos recebidos:
+
+| Header | Valor |
+|---|---|
+| content-type | application/json |
+| content-length | 307 |
+| user-agent | SkylinkPay-Webhook-Test/1.0 |
+| accept | */* |
+| accept-encoding | br, gzip, deflate |
+| accept-language | * |
+| sec-fetch-mode | cors |
+| x-invocation-id | pdx1::zw929-1792888049960-276fa95b9ad6 |
+| x-vercel-id | pdx1::zw929-1792888049960-276fa95b9ad6 |
+| host | webhook.site |
+
+(Nenhum header de assinatura: sem X-Signature, X-Timestamp nem similar.)
+
+Corpo:
+
+```json
+{
+  "eventId": "5965d78c-a469-43c7-ad29-6c05011f4418",
+  "eventType": "webhook.test",
+  "test": true,
+  "sentAt": "2026-10-25T00:27:30.275Z",
+  "merchant": {
+    "id": "<MERCHANT_ID>",
+    "commerceCode": "<COMMERCE_CODE>",
+    "name": "Urbanización Los Frailejones"
+  },
+  "message": "Prueba manual de webhook desde Skylink Pay."
+}
+```
+
+---
+
+## Bloco 7
 
 (cole aqui)
 
