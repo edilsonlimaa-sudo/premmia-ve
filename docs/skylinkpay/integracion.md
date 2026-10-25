@@ -307,12 +307,23 @@ Existem no painel; regras e prazos a descobrir.
 - **Expira em ~15 minutos**: o checkout mostra "Tiempo restante para pagar" começando perto de
   14:00 logo após criar. Isso responde ao tempo de `expirable: true`. Para a bomba é suficiente,
   mas o app deve criar a cobrança só quando o motorista já estiver na fila.
-- **Dois meios de pagamento** (dev, 2026-10-24):
-  1. **Pago Móvil**: "paga desde la app de tu banco y luego avísanos aquí". O pagador faz o
-     Pago Móvil no banco dele e confirma no checkout. Como a SkyLinkPay concilia isso é a parte
-     que interessa **(observar no primeiro pagamento real)**.
-  2. **Pago con código al teléfono (SMS)**: telefone da conta, cédula, banco e nome; chega um
-     código por SMS e o pagamento sai da conta. É o débito imediato tipo C2P.
+- **Dois meios de pagamento** (dev, 2026-10-24, inspecionados na página):
+  1. **Pago Móvil ("Confirmación automática")**: a página mostra os dados da **conta da própria
+     SkyLinkPay** (banco R4, RIF J-…, telefone 0424…), o **monto exato** e um QR para a app do
+     banco preencher sozinha. O pagador faz o Pago Móvil para essa conta e toca **"Ya pagué,
+     validar pago"**; a SkyLinkPay confere a entrada no banco dela (provavelmente por valor
+     exato + telefone do pagador) e depois liquida ao comércio (`settlementStatus`). O dinheiro
+     passa pela SkyLinkPay, não vai direto ao comércio.
+  2. **Pago con código al teléfono (C2P)**: formulário HTML `POST /pay/{token}/otp` com
+     `telefono`, `cedula_tipo`, `cedula_num`, `banco`, `nombre`; chega um código por SMS e um
+     segundo passo confirma o débito.
+- A página é **renderizada no servidor com formulários clássicos** (sem XHR/JSON): a lógica de
+  OTP, confirmação e validação do Pago Móvil existe no backend deles, mas só é acessível pela
+  página. Ver §11.
+- A página de retorno padrão recebe o token: `…/pago-exitoso?token_ws={token}`. Então a nossa
+  URL de retorno também deve receber `token_ws` **(confirmar que anexam na URL própria)**.
+- Expirado: "Se acabó el tiempo para pagar. Pídele al negocio que genere un pago nuevo." com link
+  "Volver a la tienda".
 - Lista de bancos no checkout: BCV, Venezuela, Venezolano de Crédito, Mercantil, Provincial,
   Bancaribe, Exterior, Caroní, Banesco, Sofitasa, Plaza, Bangente, BFC, 100% Banco, Delsur,
   Tesoro, Agrícola, Bancrecer, R4, Activo, Bancamiga, BID, Banplus, Digital de los Trabajadores,
@@ -372,8 +383,10 @@ Existem no painel; regras e prazos a descobrir.
 - [ ] `amount` em USD é em centavos?
 - [ ] URL base e credenciais de produção; existe sandbox com dinheiro fictício?
 - [ ] Um login pode administrar vários comércios (um por posto)?
-- [ ] URL de retorno: o redirecionamento leva parâmetros (token, status, buyOrder)? Existe URL
-      distinta para pagamento falho/cancelado ou tudo cai na mesma?
+- [~] URL de retorno: a página padrão recebe `?token_ws={token}`. Confirmar que a URL própria
+      também o recebe, e se existe URL distinta para falho/cancelado.
+- [ ] Pago Móvil: como casam o pagamento ("confirmación automática")? Só valor exato + telefone?
+      O que acontece com dois cobros do mesmo valor ao mesmo tempo?
 - [ ] Podem liberar a nossa origem em `frame-ancestors` para embutir o checkout no PWA?
 - [ ] Taxa final e split.
 
@@ -385,3 +398,27 @@ Existem no painel; regras e prazos a descobrir.
 | 2026-10-24 | POC será um serviço Node separado em `poc/skylinkpay`, não dentro do PWA. | Assinatura HMAC exige a apiKey no servidor; webhook precisa de endpoint público. |
 | 2026-10-24 | O webhook é aviso, não prova: a placa só vira "pagada" após confirmar por consulta à API. | O evento de teste chegou sem assinatura; qualquer um que descubra a URL poderia forjar um POST. |
 | 2026-10-24 | App POC "Pago desde el carro" em `poc/skylinkpay` (`npm run dev`): telas Conductor e Bombero, API própria, polling a cada 4 s por token. | Ver o fluxo ponta a ponta antes de desenhar o produto. Primeira cobrança real criada no dev: `HTTP 201`, checkout aberto. |
+
+## 11. O que a SkyLinkPay precisaria expor para termos checkout próprio
+
+Hoje o checkout é hospedado: a tela é deles. Para o motorista pagar **dentro do nosso PWA**, sem
+sair, a SkyLinkPay precisaria oferecer em JSON, assinado com o mesmo HMAC, o que a página já faz
+por formulário. Pelo que a página revela, a lógica existe; falta a casca de API.
+
+| # | Endpoint pedido | O que faz hoje na página | Esforço estimado deles |
+|---|---|---|---|
+| 1 | `GET /api/v1/merchant/transactions/token/{token}/pago-movil` → `{ banco, rif, telefono, monto, qr }` | Painel "Paga por Pago Móvil" (dados da conta deles + monto exato + QR) | Baixo: são dados estáticos + o valor do cobro |
+| 2 | `POST …/token/{token}/pago-movil/validar` (opcional: `{ telefonoPagador, referencia }`) → status | Botão "Ya pagué, validar pago" | Baixo: já existe atrás do botão |
+| 3 | `POST …/token/{token}/otp` `{ telefono, cedulaTipo, cedulaNum, banco, nombre }` → `{ otpId }` | Form `POST /pay/{token}/otp` | Baixo: mesmo handler, resposta JSON em vez de HTML |
+| 4 | `POST …/token/{token}/otp/confirmar` `{ otpId, codigo }` → status | Segundo passo do C2P | Baixo |
+| 5 | Webhook **assinado** (HMAC + timestamp) com `data.token` e status | Evento sem assinatura | Baixo |
+| 6 | `frame-ancestors` com a nossa origem (plano B se não houver API) | CSP `'self'` | Trivial, configuração |
+
+O que muda para eles ao abrir isso:
+- Os dados do pagador (telefone, cédula) passam pelo nosso servidor antes de chegar neles.
+  Precisariam de um termo com o comerciante e, possivelmente, aprovação caso a caso.
+- Perdem a marca na tela de pagamento. Em troca ganham volume: um app com postos é tráfego
+  recorrente, que é o argumento comercial ("tá aberto a negociar").
+
+Proposta a levar: "modo API direta / headless" para comerciantes aprovados, começando por
+1 + 2 (Pago Móvil dentro do app), que é o caminho mais curto, e depois 3 + 4 (C2P).
