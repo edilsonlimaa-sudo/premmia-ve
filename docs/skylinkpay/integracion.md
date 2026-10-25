@@ -170,10 +170,16 @@ assinatura inválida): **(pendente)**.
 Usar para polling do status. Valores possíveis de `status` / `resultCode`: só conhecemos
 `created` / `PENDING` **(lista completa pendente)**.
 
-### 5.3 Webhook (URL de notificaciones) — **(pendente)**
+### 5.3 Webhook (URL de notificaciones) — **(payload pendente)**
 - Configurado no painel, em Configuración → "URL de notificaciones". Tem botão **Probar webhook**
   que envia um evento de teste sem mover dinheiro: primeira coisa a usar na POC para capturar o
   payload real.
+- **Timeout de 10 segundos.** Se a nossa URL não responder nesse tempo, o painel devolve
+  `{"success": false, "message": "El webhook no respondió en 10 segundos.", "data": null}`.
+  Regra para a POC: responder `200` imediatamente e processar depois.
+- Receptor da POC: `poc/skylinkpay/webhook-receiver.js` (`npm run webhook`) registra cabeçalhos e
+  corpo em `webhooks.log`. Para o painel alcançá-lo é preciso um túnel público
+  (`npm run tunnel` usa localtunnel) e colar a URL gerada em "URL de notificaciones".
 - Payload, cabeçalhos e assinatura do webhook: **(pendente)**. Assumir que precisamos validar
   uma assinatura HMAC com a mesma apiKey até confirmar.
 - Reentregas e idempotência: **(pendente)**. Tratar o webhook como idempotente pelo `data.id`.

@@ -1,0 +1,11 @@
+{
+  "name": "skylinkpay-poc",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "POC de integración con SkyLinkPay: receptor de webhook y cliente firmado",
+  "scripts": {
+    "webhook": "node webhook-receiver.js",
+    "tunnel": "npx --yes localtunnel --port 3000"
+  }
+}

@@ -149,7 +149,25 @@ URLs y logo del checkout.
 
 ---
 
-## Bloco 5
+## Bloco 5 – "Probar webhook" com a URL placeholder (print, 2026-10-24)
+
+Cabeçalho do painel: "Respuesta del webhook · Evento de prueba · revisa también el receptor
+configurado".
+
+```json
+{
+  "success": false,
+  "message": "El webhook no respondió en 10 segundos.",
+  "data": null
+}
+```
+
+Conclusão: timeout de 10 s no webhook; a URL configurada (`https://mitienda.com.br`, placeholder)
+não respondeu. Precisamos de um receptor público para capturar o payload do evento de teste.
+
+---
+
+## Bloco 6
 
 (cole aqui)
 
