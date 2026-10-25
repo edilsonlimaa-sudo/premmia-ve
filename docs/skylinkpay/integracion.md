@@ -51,8 +51,9 @@ body
 - `timestamp` idêntico ao header `X-Timestamp`.
 - `body` é o JSON **exatamente como enviado** (mesma serialização, mesma ordem de chaves).
   No exemplo do painel as chaves estão em ordem alfabética
-  (`amount, buyOrder, currency, expirable, installments, sessionId`). Para GET o body é vazio
-  **(confirmar se é string vazia ou se a linha some; pendente)**.
+  (`amount, buyOrder, currency, expirable, installments, sessionId`).
+- **GET (sem corpo):** a linha 4 é a palavra literal `null`. A requisição **não** leva body
+  nenhum (nem `{}`, nem `null`, nem o token); a linha existe só para assinar.
 - Tolerância de relógio e janela de validade do timestamp: **(pendente)**.
 
 Referência em Node (a usar na POC):
@@ -62,8 +63,9 @@ import { createHmac } from 'node:crypto'
 
 export function signedHeaders({ method, path, body, apiKey, commerceCode }) {
   const timestamp = String(Date.now())
-  const payload = body ? JSON.stringify(body) : ''
-  const toSign = [method.toUpperCase(), path, timestamp, payload].join('\n')
+  const payload = body === undefined ? null : JSON.stringify(body)
+  // Sem corpo (GET) a 4ª linha é a palavra "null"; com corpo, o JSON exato que será enviado.
+  const toSign = [method.toUpperCase(), path, timestamp, payload ?? 'null'].join('\n')
   const signature = createHmac('sha256', apiKey).update(toSign).digest('hex')
   return {
     headers: {
@@ -74,10 +76,12 @@ export function signedHeaders({ method, path, body, apiKey, commerceCode }) {
       'X-Timestamp': timestamp,
       'X-Signature': signature,
     },
-    payload, // enviar ESTA string como body, não re-serializar
+    payload, // enviar ESTA string como body (ou nenhum body quando for null)
   }
 }
 ```
+
+Implementação real: `poc/skylinkpay/skylink.js`.
 
 ## 4. Fluxo de pagamento (ponta a ponta)
 
@@ -108,8 +112,8 @@ Base: `https://dev-axis-payment.valinkgroup.com`
 |---|---|---|---|
 | Cobros | POST | `/api/v1/merchant/transactions` | documentado abaixo |
 | Cobros | GET | Listar transacciones | **(rota pendente)** |
-| Cobros | GET | Consultar transacción (por id) | **(rota pendente)** |
-| Cobros | GET | Consultar por token | **(rota pendente)** |
+| Cobros | GET | Consultar transacción (por id) | "misma forma" que por token; rota provável `/api/v1/merchant/transactions/{id}` **(confirmar)** |
+| Cobros | GET | `/api/v1/merchant/transactions/token/{token}` | documentado abaixo |
 | Cobros | POST | Reembolsar | **(rota pendente)** |
 | Cobros | POST | Anular transacción | **(rota pendente)** |
 | Tasas | GET | Tasa BCV | **(rota pendente)** |
@@ -166,9 +170,62 @@ Response (200):
 Guardar `data.id`, `data.token` e `data.url`. Respostas de erro (formato, códigos HTTP,
 assinatura inválida): **(pendente)**.
 
-### 5.2 Consultar por token — **(pendente)**
-Usar para polling do status. Valores possíveis de `status` / `resultCode`: só conhecemos
-`created` / `PENDING` **(lista completa pendente)**.
+### 5.2 Consultar por token — `GET /api/v1/merchant/transactions/token/{token}`
+
+Busca a cobrança pelo token do checkout (o mesmo da URL `/pay/{token}`). Sem corpo; assinar com
+a linha 4 = `null` (ver §3). É a **fonte de verdade** do status: usar para polling e para
+confirmar qualquer webhook antes de marcar a placa como paga.
+
+Response de exemplo (cobrança já paga):
+
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "buyOrder": "ORD-1001",
+    "sessionId": "SES-1001",
+    "amount": 2500,
+    "currency": "VES",
+    "installments": 1,
+    "token": "payment-token",
+    "status": "authorized",
+    "settlementStatus": "pending",
+    "resultCode": "APPROVED",
+    "resultMessage": "Cobro aprobado",
+    "retryable": false,
+    "expirable": true,
+    "paymentMethod": "pago_movil_p2p",
+    "paymentTypeCode": "P2P",
+    "bankCode": "0191",
+    "bankReference": "000000000000",
+    "phoneNumber": "04120000000",
+    "nationalId": "V00000000",
+    "vesAmount": 2500,
+    "mdrRateBps": 290,
+    "commission": 0,
+    "netAmount": 2500,
+    "withholdingAmount": 0
+  }
+}
+```
+
+Campos além dos de criação:
+
+| Campo | Notas |
+|---|---|
+| `status` | `created` ao criar → `authorized` quando pago. Outros valores (falhou, expirou, anulado, reembolsado) **(pendente)**. |
+| `resultCode` / `resultMessage` | `PENDING` → `APPROVED` / "Cobro aprobado". Outros **(pendente)**. |
+| `settlementStatus` | Liquidação ao comércio: `pending` logo após pagar. Valores e prazo **(pendente)**. Não importa para liberar a bomba. |
+| `retryable` | `true` enquanto pendente, `false` quando aprovado. |
+| `paymentMethod` / `paymentTypeCode` | `pago_movil_p2p` / `P2P`. Outros meios **(pendente)**. |
+| `bankCode`, `bankReference`, `phoneNumber`, `nationalId` | Dados do pagador no Pago Móvil. **Dados pessoais**: guardar só o necessário. |
+| `vesAmount` | Valor em Bs (céntimos); relevante quando `currency` é USD. |
+| `mdrRateBps` | Taxa do serviço em pontos-base: `290` = **2,90 %**. |
+| `commission`, `netAmount`, `withholdingAmount` | Comissão cobrada, líquido ao comércio, retenção. No exemplo ainda zerados. |
+
+**Regra de "pago confirmado" para a POC:** `status === 'authorized' && resultCode === 'APPROVED'`.
 
 ### 5.3 Webhook (URL de notificaciones)
 - Configurado no painel, em Configuración → "URL de notificaciones". O botão **Probar webhook**
@@ -256,14 +313,16 @@ Existem no painel; regras e prazos a descobrir.
 ## 8. Condições comerciais e contato
 
 - Contato: **(pendente)**
-- Taxa: 3 % mencionada; split a negociar ("tá aberto a negociar").
+- Taxa: 3 % mencionada; a API devolve `mdrRateBps: 290` (2,90 %). Split a negociar ("tá aberto a negociar").
 - Piloto: **(pendente)**
 
 ## 9. Perguntas em aberto para a SkyLinkPay
 
-- [ ] Rotas exatas de Listar, Consultar (id), Consultar por token, Reembolsar, Anular, Tasa BCV e `/merchants/me`.
-- [ ] Como assinar um GET (body vazio: linha vazia ou omitida?).
+- [ ] Rotas exatas de Listar, Consultar (id), Reembolsar, Anular, Tasa BCV e `/merchants/me`.
+- [x] ~~Como assinar um GET~~ → linha 4 = `null`, sem body.
+- [x] ~~Rota de consultar por token~~ → `GET /api/v1/merchant/transactions/token/{token}`.
 - [ ] Janela de validade do `X-Timestamp`.
+- [ ] `mdrRateBps: 290` (2,90 %) é a taxa padrão? É sobre o bruto? Entra em `commission` após liquidar?
 - [ ] Webhook: os eventos de pagamento são assinados? (o de teste não traz assinatura). Quais
       `eventType` existem e qual é o payload da transação? Política de reentrega?
 - [ ] Lista completa de `status` e `resultCode` e qual significa "dinheiro confirmado".

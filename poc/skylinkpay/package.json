@@ -3,9 +3,12 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "description": "POC de integración con SkyLinkPay: receptor de webhook y cliente firmado",
+  "description": "POC de integración con SkyLinkPay: cliente firmado HMAC y receptor de webhook",
   "scripts": {
+    "create": "node --env-file=.env create-transaction.js",
+    "status": "node --env-file=.env get-by-token.js",
     "webhook": "node webhook-receiver.js",
-    "tunnel": "npx --yes localtunnel --port 3000"
+    "tunnel": "npx --yes localtunnel --port 3000",
+    "selftest": "node selftest.js"
   }
 }

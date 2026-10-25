@@ -207,7 +207,67 @@ Corpo:
 
 ---
 
-## Bloco 7
+## Bloco 7 – GET Consultar por token (print, 2026-10-24)
+
+"Busca el cobro usando el token de pago del checkout."
+
+URL: `https://dev-axis-payment.valinkgroup.com/api/v1/merchant/transactions/token/{token}`
+
+Nota: "Misma forma que Consultar transacción. El token es el de la url /pay/{token}."
+
+Ejemplo firmado (4 líneas):
+
+| Línea | Valor |
+|---|---|
+| 1 · Método | `GET` |
+| 2 · Path | `/api/v1/merchant/transactions/token/{token}` |
+| 3 · Timestamp | `Date.now()` en milisegundos, el mismo de la cabecera |
+| 4 · Body | `null` |
+
+"Esta llamada no lleva cuerpo. No mandes `{}`, ni null, ni el token. La línea 4 existe solo
+para firmar."
+
+Cabeceras: X-Api-Key, X-Commerce-Code, X-Commerce-Id, X-Timestamp, X-Signature (sin
+Content-Type en el ejemplo).
+
+Respuesta de ejemplo:
+
+```json
+{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "buyOrder": "ORD-1001",
+    "sessionId": "SES-1001",
+    "amount": 2500,
+    "currency": "VES",
+    "installments": 1,
+    "token": "payment-token",
+    "status": "authorized",
+    "settlementStatus": "pending",
+    "resultCode": "APPROVED",
+    "resultMessage": "Cobro aprobado",
+    "retryable": false,
+    "expirable": true,
+    "paymentMethod": "pago_movil_p2p",
+    "paymentTypeCode": "P2P",
+    "bankCode": "0191",
+    "bankReference": "000000000000",
+    "phoneNumber": "04120000000",
+    "nationalId": "V00000000",
+    "vesAmount": 2500,
+    "mdrRateBps": 290,
+    "commission": 0,
+    "netAmount": 2500,
+    "withholdingAmount": 0
+  }
+}
+```
+
+---
+
+## Bloco 8
 
 (cole aqui)
 
