@@ -1,9 +1,20 @@
 const $ = (id) => document.getElementById(id)
 const fmtBs = (n) => `Bs ${Number(n).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const fmtTime = (iso) => (iso ? new Date(iso).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }) : '')
+const pinKey = 'poc-pin'
 const api = async (method, path, body) => {
-  const r = await fetch(path, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+  const headers = body ? { 'Content-Type': 'application/json' } : {}
+  const pin = localStorage.getItem(pinKey)
+  if (pin) headers['x-poc-pin'] = pin
+  const r = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined })
   const data = await r.json().catch(() => ({}))
+  if (r.status === 401 && data.code === 'PIN') {
+    // La URL pública está protegida con POC_PIN: pedirlo una vez y reintentar.
+    const typed = prompt('Esta POC está protegida. Escribe el PIN:')
+    if (!typed) throw new Error('PIN requerido')
+    localStorage.setItem(pinKey, typed.trim())
+    return api(method, path, body)
+  }
   if (!r.ok) throw Object.assign(new Error(data.error || `HTTP ${r.status}`), { data })
   return data
 }

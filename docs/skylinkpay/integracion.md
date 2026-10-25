@@ -239,9 +239,13 @@ Campos além dos de criação:
 - **Timeout de 10 segundos.** Se a nossa URL não responder nesse tempo, o painel devolve
   `{"success": false, "message": "El webhook no respondió en 10 segundos.", "data": null}`.
   Regra para a POC: responder `200` imediatamente e processar depois.
-- Receptor da POC: `POST /webhook` em `poc/skylinkpay/server.js` (`npm run dev`) registra cabeçalhos e
-  corpo em `webhooks.log`. Para o painel alcançá-lo é preciso um túnel público
-  (`npm run tunnel` usa localtunnel) e colar a URL gerada em "URL de notificaciones".
+- Receptor da POC: `POST /webhook` em `poc/skylinkpay/handler.js`. Em local (`npm run dev`)
+  registra em `webhooks.log` e precisa de túnel (`npm run tunnel`). **Na Vercel** a URL é fixa:
+  `https://<proyecto>.vercel.app/webhook` → é a que vai em "URL de notificaciones". Passos de
+  deploy em `poc/skylinkpay/README.md` (root `poc/skylinkpay`, Upstash Redis do marketplace para
+  guardar os cobros, variáveis `SKYLINK_*`).
+- Se o evento trouxer `data.token`, o receptor consulta a API por token (limitado a 6 s) e
+  responde `{ received: true, refreshed: true }`; sem token conhecido, só registra.
 
 **Evento de teste capturado (2026-10-24, via webhook.site):**
 
