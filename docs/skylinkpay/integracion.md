@@ -318,6 +318,12 @@ Existem no painel; regras e prazos a descobrir.
   Tesoro, Agrícola, Bancrecer, R4, Activo, Bancamiga, BID, Banplus, Digital de los Trabajadores,
   Banfanb, N58, BNC, IMCP.
 - Link "Cancelar pago y volver a la tienda" → provavelmente a URL de retorno **(confirmar)**.
+- **Não embutível em iframe** (testado 2026-10-24): a página responde `X-Frame-Options: SAMEORIGIN`
+  e CSP `frame-ancestors 'self'`. Para o PWA instalado, o caminho é navegar na mesma aba e voltar
+  pela URL de retorno apontando ao PWA (no Android o Chrome abre o checkout numa aba interna por
+  cima do app e volta sozinho ao redirecionar para o nosso domínio). Antes de sair, guardar id e
+  token do cobro em `localStorage` para retomar o polling ao voltar. Pedir à SkyLinkPay se podem
+  liberar a nossa origem em `frame-ancestors`.
 - URL de retorno: para onde o **navegador do pagador** é redirecionado ao terminar no checkout.
   Padrão `https://skylinkpay.valinkgroup.com/pago-exitoso`; podemos apontar para uma página
   nossa (ex.: "recibimos tu pago, muestra la placa al bombero"). É experiência de usuário, **não
@@ -368,6 +374,7 @@ Existem no painel; regras e prazos a descobrir.
 - [ ] Um login pode administrar vários comércios (um por posto)?
 - [ ] URL de retorno: o redirecionamento leva parâmetros (token, status, buyOrder)? Existe URL
       distinta para pagamento falho/cancelado ou tudo cai na mesma?
+- [ ] Podem liberar a nossa origem em `frame-ancestors` para embutir o checkout no PWA?
 - [ ] Taxa final e split.
 
 ## 10. Decisões da POC
